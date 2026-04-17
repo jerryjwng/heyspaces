@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Plus, Menu, LayoutDashboard, UserCog, LogOut, User } from 'lucide-react';
+import { Search, Plus, Menu, LayoutDashboard, UserCog, LogOut } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -8,22 +8,34 @@ import { cn } from '@/lib/utils';
 
 interface NavbarProps {
   onSearchClick?: () => void;
+  /** Hide the navbar search pill (e.g. on /inserate where the FilterBar is the search) */
+  hideSearch?: boolean;
 }
 
-export function Navbar({ onSearchClick }: NavbarProps) {
+export function Navbar({ onSearchClick, hideSearch = false }: NavbarProps) {
   const { user, signOut } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const navLinks = [
-    { label: 'Inserate', href: '/inserate' },
-    { label: 'Mein Dashboard', href: '/dashboard' },
-    { label: 'Favoriten', href: '/anfragen' },
-  ];
+  const navLinks = user
+    ? [
+        { label: 'Inserate', href: '/inserate' },
+        { label: 'Mein Dashboard', href: '/dashboard' },
+        { label: 'Favoriten', href: '/anfragen' },
+      ]
+    : [{ label: 'Inserate', href: '/inserate' }];
 
   const handleCreateClick = () => {
     if (!user) navigate('/login');
     else navigate('/inserate/neu');
+  };
+
+  const handleSearchClick = () => {
+    if (onSearchClick) {
+      onSearchClick();
+    } else {
+      navigate('/inserate');
+    }
   };
 
   const initials = user ? `${user.vorname[0]}${user.nachname[0]}` : '';
@@ -57,35 +69,37 @@ export function Navbar({ onSearchClick }: NavbarProps) {
 
         {/* Right actions */}
         <div className="hidden items-center gap-3 md:flex">
-          <button
-            onClick={onSearchClick}
-            className="inline-flex items-center gap-2 rounded-pill border border-border bg-neutral px-[18px] py-[9px] text-sm font-medium text-foreground-secondary transition-colors hover:border-border-strong"
-          >
-            <Search className="h-4 w-4" />
-            Suchen
-          </button>
-
-          <button
-            onClick={handleCreateClick}
-            className="inline-flex items-center gap-2 rounded-pill bg-primary px-[22px] py-[10px] text-sm font-semibold text-primary-foreground transition-all duration-150 hover:bg-primary-hover hover:-translate-y-px active:scale-[0.98]"
-          >
-            <Plus className="h-4 w-4" />
-            Inserat erstellen
-          </button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex h-10 w-10 items-center justify-center rounded-full border-[1.5px] border-border bg-neutral text-[13px] font-semibold text-foreground-secondary transition-colors hover:border-border-strong">
-                {user ? initials : <User className="h-4 w-4" />}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              sideOffset={12}
-              className="min-w-[220px] rounded-2xl border border-border bg-white p-2 shadow-dropdown"
+          {!hideSearch && (
+            <button
+              onClick={handleSearchClick}
+              className="inline-flex items-center gap-2 rounded-pill border border-border bg-neutral px-[18px] py-[9px] text-sm font-medium text-foreground-secondary transition-colors hover:border-border-strong"
             >
-              {user ? (
-                <>
+              <Search className="h-4 w-4" />
+              Suchen
+            </button>
+          )}
+
+          {user ? (
+            <>
+              <button
+                onClick={handleCreateClick}
+                className="inline-flex items-center gap-2 rounded-pill bg-primary px-[22px] py-[10px] text-sm font-semibold text-primary-foreground transition-all duration-150 hover:bg-primary-hover hover:-translate-y-px active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4" />
+                Inserat erstellen
+              </button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex h-10 w-10 items-center justify-center rounded-full border-[1.5px] border-border bg-neutral text-[13px] font-semibold text-foreground-secondary transition-colors hover:border-border-strong">
+                    {initials}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={12}
+                  className="min-w-[220px] rounded-2xl border border-border bg-white p-2 shadow-dropdown"
+                >
                   <div className="px-3 py-2.5">
                     <p className="text-sm font-bold text-foreground">{user.vorname} {user.nachname}</p>
                     <p className="mt-0.5 text-xs text-foreground-tertiary">{user.email}</p>
@@ -101,19 +115,26 @@ export function Navbar({ onSearchClick }: NavbarProps) {
                   <DropdownMenuItem onClick={signOut} className="rounded-lg px-3 py-2.5 text-sm text-status-red-fg focus:bg-neutral focus:text-status-red-fg">
                     <LogOut className="mr-2 h-4 w-4" /> Abmelden
                   </DropdownMenuItem>
-                </>
-              ) : (
-                <>
-                  <DropdownMenuItem onClick={() => navigate('/login')} className="rounded-lg px-3 py-2.5 text-sm focus:bg-neutral">
-                    Anmelden
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/registrieren')} className="rounded-lg px-3 py-2.5 text-sm focus:bg-neutral">
-                    Registrieren
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/login')}
+                className="inline-flex items-center rounded-pill border-[1.5px] border-foreground bg-transparent px-5 py-[8px] text-sm font-semibold text-foreground transition-colors hover:bg-neutral"
+              >
+                Anmelden
+              </button>
+              <button
+                onClick={handleCreateClick}
+                className="inline-flex items-center gap-2 rounded-pill bg-primary px-[22px] py-[10px] text-sm font-semibold text-primary-foreground transition-all duration-150 hover:bg-primary-hover hover:-translate-y-px active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4" />
+                Inserat erstellen
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile */}
@@ -136,11 +157,13 @@ export function Navbar({ onSearchClick }: NavbarProps) {
                 ))}
               </nav>
               <div className="flex flex-col gap-3">
-                <SheetClose asChild>
-                  <Button variant="secondary" className="justify-start gap-2" onClick={onSearchClick}>
-                    <Search className="h-4 w-4" /> Suchen
-                  </Button>
-                </SheetClose>
+                {!hideSearch && (
+                  <SheetClose asChild>
+                    <Button variant="secondary" className="justify-start gap-2" onClick={handleSearchClick}>
+                      <Search className="h-4 w-4" /> Suchen
+                    </Button>
+                  </SheetClose>
+                )}
                 <SheetClose asChild>
                   <Button className="justify-start gap-2" onClick={handleCreateClick}>
                     <Plus className="h-4 w-4" /> Inserat erstellen
