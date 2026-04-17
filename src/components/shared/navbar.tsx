@@ -17,13 +17,15 @@ export function Navbar({ onSearchClick, hideSearch = false }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const navLinks = user
+  const baseLinks = user
     ? [
         { label: 'Inserate', href: '/inserate' },
         { label: 'Mein Dashboard', href: '/dashboard' },
         { label: 'Favoriten', href: '/anfragen' },
       ]
     : [{ label: 'Inserate', href: '/inserate' }];
+  // On /inserate the search pill IS the entry point — drop the redundant "Inserate" link
+  const navLinks = hideSearch ? baseLinks.filter(l => l.href !== '/inserate') : baseLinks;
 
   const handleCreateClick = () => {
     if (!user) navigate('/login');
