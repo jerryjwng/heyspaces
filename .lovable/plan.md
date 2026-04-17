@@ -1,55 +1,31 @@
 
 
-## HeySpaces — Screen 1: Shared Components
+## Fix: Single Search Entry Point (Airbnb Logic)
 
-### Design Language (from references)
-- Clean, minimal black/white/gray palette with subtle lime-green accents
-- Rounded pill buttons, soft card borders, system font stack
-- Warm off-white backgrounds (#f9f9f6-ish), clean spacing
+### Problems to fix
+1. Navbar still has "Inserate" as a clickable link and possibly a "Suchen" pill — both must go on `/inserate`
+2. The whole search pill is currently clickable — only the black circle button should open the panel
+3. Need to verify there's only ONE search trigger on the page
 
-### Components to Build
+### Changes
 
-**1. Navbar (`components/shared/navbar.tsx`)**
-- Sticky 64px header, white bg, subtle bottom border
-- Left: "HeySpaces" logo (font-weight 600)
-- Center (desktop): Inserate, Mein Dashboard, Favoriten links
-- Right: Search pill button, "+ Inserat erstellen" dark pill, Profile avatar with dropdown
-- Mobile: hamburger → slide-in drawer
-- Dropdown adapts for logged-in vs logged-out state
+**1. `src/components/shared/navbar.tsx`**
+- When `hideSearch` prop is true (passed from `/inserate`), also hide the "Inserate" nav link
+- Render "Inserate" as plain non-clickable text instead (or omit entirely on this page)
+- Confirm the "Suchen" navbar pill is fully removed when `hideSearch` is true (already the case, but double-check)
 
-**2. Footer (`components/shared/footer.tsx`)**
-- Links: Inserate | Über uns | Datenschutz | Impressum
-- © 2025 HeySpaces
+**2. `src/components/shared/airbnb-search.tsx`**
+- Remove `onClick={() => setExpanded(true)}` and `role="button"` from the outer pill `<div>`
+- Move the expand trigger to ONLY the black circle search button
+- The 3 sections ("Wo?", "Kategorie", "Zimmer") become purely visual labels — no click handlers
+- Keep the expanded panel, overlay, and "X Inserate anzeigen" apply flow exactly as is
 
-**3. FilterBar (`components/shared/filter-bar.tsx`)**
-- Collapsed: search pill "Wo suchst du?"
-- Expanded: 4-section row (Ort, Kategorie toggle pills, Max Preis, Zimmer stepper)
-- Action row with reset + search buttons
-- Active filter chips with × remove
-- Mobile: fullscreen overlay
-- URL param sync for shareable filters
+**3. `src/pages/InserateListing.tsx`**
+- No changes needed — grid already always renders below the search pill
 
-**4. InseratCard (`components/inserate/inserat-card.tsx`)**
-- Clickable card → detail page
-- 4:3 image area with category badge, favorite heart, status badge
-- Price, title, location·sqm·rooms, owner info
-
-**5. InseratGrid (`components/inserate/inserat-grid.tsx`)**
-- Responsive grid: 3 cols desktop, 2 tablet, 1 mobile
-
-**6. StatusBadge (`components/shared/status-badge.tsx`)**
-- Pill badges with color variants for all status types
-
-**7. AnfrageModal (`components/shared/anfrage-modal.tsx`)**
-- Dialog overlay with contact form (Vorname, Nachname, Email, Telefon, Einzug ab, Nachricht)
-- Success state with checkmark
-
-### Supporting Files
-- `lib/types.ts` — All TypeScript types from spec
-- `lib/mock-data.ts` — Realistic German mock data (cities, users, listings)
-- `hooks/use-auth.ts` — Auth hook stub (mock, Supabase later)
-
-### Routing Setup
-- React Router routes matching the spec's URL structure
-- All pages as placeholder shells initially
+### Result
+- ONE black circle button = ONE way to open filters
+- Pill labels are display-only
+- No "Inserate" link, no "Suchen" navbar pill on this page
+- Grid always visible, updates when "X Inserate anzeigen" clicked
 
