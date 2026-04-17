@@ -81,14 +81,10 @@ export function AirbnbSearch({ values, onApply, onReset, resultCount }: Props) {
 
   return (
     <>
-      {/* Collapsed Pill — entire pill is the trigger */}
+      {/* Collapsed Pill — only the search button is the trigger */}
       <div className="px-4 py-4 md:px-12">
         <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setExpanded(true)}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(true); } }}
-          className="mx-auto flex h-14 w-full max-w-[680px] cursor-pointer items-center rounded-pill border border-border-default bg-white pl-2 pr-1 text-left shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+          className="mx-auto flex h-14 w-full max-w-[680px] items-center rounded-pill border border-border-default bg-white pl-2 pr-1 text-left shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
         >
           {/* Wo */}
           <div className="flex flex-[2] flex-col px-6 min-w-0">
