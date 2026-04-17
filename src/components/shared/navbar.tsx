@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Plus, Menu, X, LayoutDashboard, UserCog, LogOut, User } from 'lucide-react';
+import { Search, Plus, Menu, LayoutDashboard, UserCog, LogOut, User } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 interface NavbarProps {
   onSearchClick?: () => void;
@@ -22,107 +22,114 @@ export function Navbar({ onSearchClick }: NavbarProps) {
   ];
 
   const handleCreateClick = () => {
-    if (!user) {
-      navigate('/login');
-    } else {
-      navigate('/inserate/neu');
-    }
+    if (!user) navigate('/login');
+    else navigate('/inserate/neu');
   };
 
   const initials = user ? `${user.vorname[0]}${user.nachname[0]}` : '';
 
   return (
-    <header className="sticky top-0 z-50 h-16 border-b border-border bg-card">
-      <div className="container mx-auto flex h-full items-center justify-between px-6">
-        {/* Left: Logo */}
-        <Link to="/" className="text-lg font-semibold text-foreground">
+    <header className="sticky top-0 z-[100] h-[68px] border-b border-border bg-white/95 backdrop-blur-md">
+      <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between px-6 md:px-12">
+        {/* Logo */}
+        <Link to="/" className="text-[18px] font-bold tracking-[-0.025em] text-foreground">
           HeySpaces
         </Link>
 
-        {/* Center: Nav links (desktop) */}
-        <nav className="hidden items-center gap-8 md:flex">
-          {navLinks.map(link => (
-            <Link
-              key={link.href}
-              to={link.href}
-              className={`text-sm transition-colors hover:text-foreground ${
-                location.pathname === link.href ? 'font-medium text-foreground' : 'text-muted-foreground'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+        {/* Center nav (desktop) */}
+        <nav className="hidden items-center gap-9 md:flex">
+          {navLinks.map(link => {
+            const active = location.pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={cn(
+                  'text-sm transition-colors duration-150',
+                  active ? 'font-semibold text-foreground' : 'font-medium text-foreground-secondary hover:text-foreground'
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Right: Actions */}
+        {/* Right actions */}
         <div className="hidden items-center gap-3 md:flex">
-          <Button
-            variant="secondary"
-            className="rounded-full gap-2"
+          <button
             onClick={onSearchClick}
+            className="inline-flex items-center gap-2 rounded-pill border border-border bg-neutral px-[18px] py-[9px] text-sm font-medium text-foreground-secondary transition-colors hover:border-border-strong"
           >
             <Search className="h-4 w-4" />
             Suchen
-          </Button>
+          </button>
 
-          <Button
-            className="rounded-full gap-2"
+          <button
             onClick={handleCreateClick}
+            className="inline-flex items-center gap-2 rounded-pill bg-primary px-[22px] py-[10px] text-sm font-semibold text-primary-foreground transition-all duration-150 hover:bg-primary-hover hover:-translate-y-px active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
             Inserat erstellen
-          </Button>
+          </button>
 
-          {/* Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
+              <button className="flex h-10 w-10 items-center justify-center rounded-full border-[1.5px] border-border bg-neutral text-[13px] font-semibold text-foreground-secondary transition-colors hover:border-border-strong">
                 {user ? initials : <User className="h-4 w-4" />}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent
+              align="end"
+              sideOffset={12}
+              className="min-w-[220px] rounded-2xl border border-border bg-white p-2 shadow-dropdown"
+            >
               {user ? (
                 <>
-                  <div className="px-3 py-2">
-                    <p className="text-sm font-medium">{user.vorname} {user.nachname}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <div className="px-3 py-2.5">
+                    <p className="text-sm font-bold text-foreground">{user.vorname} {user.nachname}</p>
+                    <p className="mt-0.5 text-xs text-foreground-tertiary">{user.email}</p>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <DropdownMenuSeparator className="my-1 bg-border" />
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')} className="rounded-lg px-3 py-2.5 text-sm focus:bg-neutral">
                     <LayoutDashboard className="mr-2 h-4 w-4" /> Mein Dashboard
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/profil')}>
+                  <DropdownMenuItem onClick={() => navigate('/profil')} className="rounded-lg px-3 py-2.5 text-sm focus:bg-neutral">
                     <UserCog className="mr-2 h-4 w-4" /> Profil bearbeiten
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
+                  <DropdownMenuSeparator className="my-1 bg-border" />
+                  <DropdownMenuItem onClick={signOut} className="rounded-lg px-3 py-2.5 text-sm text-status-red-fg focus:bg-neutral focus:text-status-red-fg">
                     <LogOut className="mr-2 h-4 w-4" /> Abmelden
                   </DropdownMenuItem>
                 </>
               ) : (
                 <>
-                  <DropdownMenuItem onClick={() => navigate('/login')}>Anmelden</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/registrieren')}>Registrieren</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/login')} className="rounded-lg px-3 py-2.5 text-sm focus:bg-neutral">
+                    Anmelden
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/registrieren')} className="rounded-lg px-3 py-2.5 text-sm focus:bg-neutral">
+                    Registrieren
+                  </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        {/* Mobile: Hamburger */}
+        {/* Mobile */}
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-72">
+          <SheetContent side="right" className="w-72 bg-white">
             <div className="flex flex-col gap-6 pt-8">
-              <Link to="/" className="text-lg font-semibold">HeySpaces</Link>
+              <Link to="/" className="text-[18px] font-bold tracking-[-0.025em]">HeySpaces</Link>
               <nav className="flex flex-col gap-4">
                 {navLinks.map(link => (
                   <SheetClose asChild key={link.href}>
-                    <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground">
+                    <Link to={link.href} className="text-sm font-medium text-foreground-secondary hover:text-foreground">
                       {link.label}
                     </Link>
                   </SheetClose>
@@ -130,12 +137,12 @@ export function Navbar({ onSearchClick }: NavbarProps) {
               </nav>
               <div className="flex flex-col gap-3">
                 <SheetClose asChild>
-                  <Button variant="secondary" className="rounded-full gap-2 justify-start" onClick={onSearchClick}>
+                  <Button variant="secondary" className="justify-start gap-2" onClick={onSearchClick}>
                     <Search className="h-4 w-4" /> Suchen
                   </Button>
                 </SheetClose>
                 <SheetClose asChild>
-                  <Button className="rounded-full gap-2 justify-start" onClick={handleCreateClick}>
+                  <Button className="justify-start gap-2" onClick={handleCreateClick}>
                     <Plus className="h-4 w-4" /> Inserat erstellen
                   </Button>
                 </SheetClose>
@@ -143,19 +150,19 @@ export function Navbar({ onSearchClick }: NavbarProps) {
               <div className="border-t border-border pt-4">
                 {user ? (
                   <div className="flex flex-col gap-3">
-                    <p className="text-sm font-medium">{user.vorname} {user.nachname}</p>
+                    <p className="text-sm font-bold">{user.vorname} {user.nachname}</p>
                     <SheetClose asChild>
-                      <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">Mein Dashboard</Link>
+                      <Link to="/dashboard" className="text-sm text-foreground-secondary hover:text-foreground">Mein Dashboard</Link>
                     </SheetClose>
-                    <button onClick={signOut} className="text-sm text-destructive text-left">Abmelden</button>
+                    <button onClick={signOut} className="text-left text-sm text-status-red-fg">Abmelden</button>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
                     <SheetClose asChild>
-                      <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Anmelden</Link>
+                      <Link to="/login" className="text-sm text-foreground-secondary hover:text-foreground">Anmelden</Link>
                     </SheetClose>
                     <SheetClose asChild>
-                      <Link to="/registrieren" className="text-sm text-muted-foreground hover:text-foreground">Registrieren</Link>
+                      <Link to="/registrieren" className="text-sm text-foreground-secondary hover:text-foreground">Registrieren</Link>
                     </SheetClose>
                   </div>
                 )}
