@@ -109,11 +109,16 @@ export function AirbnbSearch({ values, onApply, onReset, resultCount }: Props) {
               {values.zimmer > 0 ? `${values.zimmer}+` : 'Beliebig'}
             </span>
           </div>
-          {/* Decorative search icon (entire pill is clickable) */}
-          <span aria-hidden="true" className="relative ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
+          {/* Search button — the ONLY trigger that opens the panel */}
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-label="Filter öffnen"
+            className="relative ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-colors hover:bg-foreground/90"
+          >
             <Search className="h-[18px] w-[18px]" />
             {hasActive && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-foreground ring-2 ring-white" />}
-          </span>
+          </button>
         </div>
 
         {/* Active summary */}
