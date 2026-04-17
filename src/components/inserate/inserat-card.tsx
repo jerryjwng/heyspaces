@@ -25,9 +25,18 @@ export function InseratCard({ inserat, isFavorite = false, onFavorite }: Inserat
       >
         {/* Image */}
         <div className="relative aspect-[16/9] overflow-hidden bg-sand">
-          <div className={cn('flex h-full items-center justify-center text-foreground-tertiary transition-transform duration-300 group-hover:scale-[1.03]', isInactive && 'grayscale')}>
-            <MapPin className="h-8 w-8" />
-          </div>
+          {inserat.bilder?.[0] ? (
+            <img
+              src={inserat.bilder[0]}
+              alt={inserat.titel}
+              loading="lazy"
+              className={cn('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]', isInactive && 'grayscale')}
+            />
+          ) : (
+            <div className={cn('flex h-full items-center justify-center text-foreground-tertiary', isInactive && 'grayscale')}>
+              <MapPin className="h-8 w-8" />
+            </div>
+          )}
 
           {/* Category */}
           <span className="absolute left-3 top-3 rounded-pill border border-white/60 bg-white/90 px-3 py-1 text-[11px] font-semibold text-foreground backdrop-blur-md">
