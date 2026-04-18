@@ -21,7 +21,7 @@ export function Navbar({ onSearchClick, hideSearch = false }: NavbarProps) {
     ? [
         { label: 'Inserate', href: '/inserate' },
         { label: 'Mein Dashboard', href: '/dashboard' },
-        { label: 'Favoriten', href: '/anfragen' },
+        { label: 'Anfragen', href: '/anfragen' },
       ]
     : [{ label: 'Inserate', href: '/inserate' }];
   // On /inserate the search pill IS the entry point — drop the redundant "Inserate" link
