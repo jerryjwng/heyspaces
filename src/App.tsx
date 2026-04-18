@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Registrieren from "./pages/Registrieren";
 import Dashboard from "./pages/Dashboard";
 import Anfragen from "./pages/Anfragen";
+import Profil from "./pages/Profil";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/registrieren" element={<Registrieren />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/anfragen" element={<Anfragen />} />
+            <Route path="/profil" element={<Profil />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
