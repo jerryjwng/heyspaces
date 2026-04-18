@@ -28,7 +28,7 @@ export function InseratCard({ inserat, isFavorite = false, onFavorite }: Inserat
         )}
       >
         {/* Image */}
-        <div className="relative aspect-[4/5] overflow-hidden bg-neutral">
+        <div className="relative aspect-[4/3] overflow-hidden bg-neutral">
           {inserat.bilder?.[0] ? (
             <img
               src={inserat.bilder[0]}
