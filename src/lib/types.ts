@@ -32,6 +32,29 @@ export type Inserat = {
   created_at: string;
   updated_at?: string;
   owner?: User;
+  // Extended fields
+  objekttyp?: string;
+  angebotstyp?: string;
+  warmmiete?: number;
+  nebenkosten?: number;
+  heizkosten?: number;
+  preis_pro_qm?: number;
+  kaution?: number;
+  etage?: number;
+  gesamtgeschosse?: number;
+  stadtteil?: string;
+  hausnummer?: string;
+  ausstattung_innen?: string[];
+  ausstattung_aussen?: string[];
+  baujahr?: number;
+  heizungsart?: string;
+  energietraeger?: string;
+  energieklasse?: string;
+  energieverbrauch?: number;
+  energieausweis_typ?: string;
+  objektzustand?: string;
+  stichwoerter?: string[];
+  besichtigungshinweise?: string;
 };
 
 export type Anfrage = {
