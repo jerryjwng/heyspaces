@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { MapPin, CheckCircle2, ChevronLeft, X, Check, Images } from 'lucide-react';
+import { MapPin, CheckCircle2, ChevronLeft, X, Check, Images, Calendar, Square, DoorOpen, Building2, Sparkles } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { mockInserate } from '@/lib/mock-data';
@@ -21,10 +21,16 @@ const formatDate = (iso: string) => {
   return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
-const formatPrice = (preis: number, kategorie: string) =>
-  kategorie === 'kaufen'
-    ? `€ ${preis.toLocaleString('de-DE')}`
-    : `€ ${preis.toLocaleString('de-DE')} / Monat`;
+const formatEUR = (n?: number, decimals = 0) =>
+  typeof n === 'number'
+    ? `€ ${n.toLocaleString('de-DE', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`
+    : '–';
+
+const ANGEBOTSTYP_LABELS: Record<string, string> = {
+  miete: 'Zur Miete',
+  kauf: 'Zum Kauf',
+  wg: 'WG-Zimmer',
+};
 
 const InseratDetail = () => {
   const { id } = useParams();
@@ -39,26 +45,27 @@ const InseratDetail = () => {
     ? new Date(inserat.owner.created_at).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
     : 'Januar 2023';
 
-  const priceLabel = formatPrice(inserat.preis, inserat.kategorie);
-  const periodLabel = inserat.kategorie === 'kaufen' ? 'Kaufpreis' : 'pro Monat';
+  const isKauf = inserat.angebotstyp === 'kauf' || inserat.kategorie === 'kaufen';
+  const kaltLabel = isKauf ? 'Kaufpreis' : 'Kaltmiete';
+  const periodLabel = isKauf ? 'Kaufpreis' : 'pro Monat';
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FAFAF8]">
+    <div className="flex min-h-screen flex-col bg-background">
       <Navbar hideSearch />
 
       <main className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-32 md:px-12 md:pb-20">
         {/* Breadcrumb */}
         <nav className="flex items-center justify-between py-4 text-[13px]">
-          <p className="truncate text-foreground-tertiary">
+          <p className="truncate text-muted-foreground">
             <Link to="/inserate" className="hover:text-foreground">Inserate</Link>
             <span className="mx-1.5">→</span>
             <span>{inserat.stadt}</span>
             <span className="mx-1.5">→</span>
-            <span className="text-foreground-secondary">{inserat.titel}</span>
+            <span className="text-foreground">{inserat.titel}</span>
           </p>
           <button
             onClick={() => navigate('/inserate')}
-            className="hidden items-center gap-1 text-[14px] text-foreground-secondary transition-colors hover:text-foreground sm:flex"
+            className="hidden items-center gap-1 text-[14px] text-muted-foreground transition-colors hover:text-foreground sm:flex"
           >
             <ChevronLeft className="h-4 w-4" /> Zurück zu Inseraten
           </button>
@@ -66,7 +73,6 @@ const InseratDetail = () => {
 
         {/* Photo Gallery */}
         <section className="relative mb-10 overflow-hidden rounded-[20px]">
-          {/* Mobile: single image + scroll */}
           <div className="md:hidden">
             <div className="h-[260px] overflow-hidden rounded-[20px]">
               <img src={GALLERY_IMAGES[0]} alt={inserat.titel} className="h-full w-full object-cover" />
@@ -78,7 +84,6 @@ const InseratDetail = () => {
             </div>
           </div>
 
-          {/* Desktop: grid */}
           <div className="hidden h-[480px] gap-2 md:grid md:grid-cols-5">
             <div className="col-span-3 overflow-hidden rounded-l-[20px]">
               <img src={GALLERY_IMAGES[0]} alt={inserat.titel} className="h-full w-full object-cover" />
@@ -104,80 +109,210 @@ const InseratDetail = () => {
         <div className="grid grid-cols-1 gap-14 md:grid-cols-[1fr_380px]">
           {/* LEFT */}
           <div>
-            <span className="mb-4 inline-block rounded-full bg-[#E8F0FE] px-3 py-1 text-[11px] font-semibold text-[#1A3FAB]">
-              {KATEGORIE_LABELS[inserat.kategorie]}
-            </span>
+            {/* 2. Badges */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {inserat.objekttyp && (
+                <span className="inline-block rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
+                  {inserat.objekttyp}
+                </span>
+              )}
+              <span className="inline-block rounded-full bg-[#E8F0FE] px-3 py-1 text-[11px] font-semibold text-[#1A3FAB]">
+                {ANGEBOTSTYP_LABELS[inserat.angebotstyp ?? 'miete'] ?? KATEGORIE_LABELS[inserat.kategorie]}
+              </span>
+            </div>
+
+            {/* 3. Titel */}
             <h1 className="mb-2 text-[32px] font-bold leading-tight tracking-[-0.5px] text-foreground">
               {inserat.titel}
             </h1>
-            <p className="mb-8 flex items-center gap-1.5 text-[15px] text-foreground-secondary">
+
+            {/* 4. Standort */}
+            <p className="mb-8 flex items-center gap-1.5 text-[15px] text-muted-foreground">
               <MapPin className="h-4 w-4" />
-              {inserat.strasse}, {inserat.plz} {inserat.stadt}
+              {inserat.strasse}{inserat.hausnummer ? ` ${inserat.hausnummer}` : ''}, {inserat.plz} {inserat.stadt}
+              {inserat.stadtteil ? ` · ${inserat.stadtteil}` : ''}
             </p>
 
-            {/* Stats row */}
-            <div className="mb-10 grid grid-cols-3 gap-3">
+            {/* 5. Five key facts */}
+            <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-5">
               {[
-                { label: 'ZIMMER', value: String(inserat.zimmer) },
-                { label: 'WOHNFLÄCHE', value: `${inserat.flaeche} m²` },
-                { label: 'VERFÜGBAR AB', value: formatDate(inserat.verfuegbar_ab) },
+                { Icon: DoorOpen, label: 'ZIMMER', value: String(inserat.zimmer) },
+                { Icon: Square, label: 'FLÄCHE', value: `${inserat.flaeche} m²` },
+                { Icon: Building2, label: 'ETAGE', value: inserat.etage != null ? `${inserat.etage}${inserat.gesamtgeschosse ? `/${inserat.gesamtgeschosse}` : ''}` : '–' },
+                { Icon: Calendar, label: 'VERFÜGBAR', value: formatDate(inserat.verfuegbar_ab) },
+                { Icon: Sparkles, label: 'ZUSTAND', value: inserat.objektzustand ?? '–' },
               ].map(s => (
-                <div key={s.label} className="rounded-xl bg-[#F5F5F3] px-5 py-4">
-                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground-tertiary">{s.label}</p>
-                  <p className="text-[18px] font-bold text-foreground">{s.value}</p>
+                <div key={s.label} className="rounded-xl bg-muted px-4 py-4">
+                  <s.Icon className="mb-2 h-4 w-4 text-muted-foreground" />
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{s.label}</p>
+                  <p className="text-[15px] font-bold text-foreground">{s.value}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mb-10 h-px bg-[#EBEBEB]" />
+            <div className="mb-10 h-px bg-border" />
 
-            {/* Description */}
+            {/* 6. Beschreibung */}
             <section className="mb-10">
-              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground-tertiary">BESCHREIBUNG</p>
-              <p className="whitespace-pre-line text-[16px] leading-[1.7] text-foreground-secondary">
+              <h2 className="mb-4 text-[18px] font-bold text-foreground">Beschreibung</h2>
+              <p className="whitespace-pre-line text-[16px] leading-[1.7] text-muted-foreground">
                 {inserat.beschreibung}
               </p>
             </section>
 
-            <div className="mb-10 h-px bg-[#EBEBEB]" />
+            <div className="mb-10 h-px bg-border" />
 
-            {/* Details */}
-            <section>
-              <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground-tertiary">DETAILS</p>
+            {/* 7. Ausstattung */}
+            {(inserat.ausstattung_innen?.length || inserat.ausstattung_aussen?.length) ? (
+              <>
+                <section className="mb-10">
+                  <h2 className="mb-5 text-[18px] font-bold text-foreground">Ausstattung</h2>
+                  <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                    {[
+                      { title: 'Innen', items: inserat.ausstattung_innen ?? [] },
+                      { title: 'Außen', items: inserat.ausstattung_aussen ?? [] },
+                    ].map(group => (
+                      <div key={group.title}>
+                        <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{group.title}</p>
+                        <ul className="space-y-2.5">
+                          {group.items.map(item => (
+                            <li key={item} className="flex items-center gap-2.5 text-[14px] text-foreground">
+                              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#1A6B3C]" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+                <div className="mb-10 h-px bg-border" />
+              </>
+            ) : null}
+
+            {/* 8. Kostenübersicht */}
+            <section className="mb-10">
+              <h2 className="mb-5 text-[18px] font-bold text-foreground">Kostenübersicht</h2>
+              <div className="overflow-hidden rounded-xl bg-muted">
+                {[
+                  { label: kaltLabel, value: formatEUR(inserat.preis), bold: false },
+                  { label: 'Nebenkosten', value: formatEUR(inserat.nebenkosten), bold: false },
+                  { label: 'Heizkosten', value: formatEUR(inserat.heizkosten), bold: false },
+                  ...(inserat.warmmiete != null ? [{ label: 'Warmmiete', value: formatEUR(inserat.warmmiete), bold: true }] : []),
+                  { label: 'Preis / m²', value: inserat.preis_pro_qm != null ? `€ ${inserat.preis_pro_qm.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '–', bold: false },
+                  { label: 'Kaution', value: formatEUR(inserat.kaution), bold: false },
+                ].map((row, i, arr) => (
+                  <div key={row.label} className={cn('flex items-center justify-between px-5 py-3.5', i < arr.length - 1 && 'border-b border-background/60')}>
+                    <span className={cn('text-[14px]', row.bold ? 'font-bold text-foreground' : 'text-muted-foreground')}>{row.label}</span>
+                    <span className={cn('text-[14px] tabular-nums', row.bold ? 'font-bold text-foreground' : 'font-semibold text-foreground')}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <div className="mb-10 h-px bg-border" />
+
+            {/* 9. Bausubstanz */}
+            <section className="mb-10">
+              <h2 className="mb-5 text-[18px] font-bold text-foreground">Bausubstanz</h2>
               <dl className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
                 {[
-                  ['Kategorie', KATEGORIE_LABELS[inserat.kategorie]],
-                  ['Preis', priceLabel],
-                  ['Wohnfläche', `${inserat.flaeche} m²`],
-                  ['Zimmer', String(inserat.zimmer)],
-                  ['Verfügbar ab', formatDate(inserat.verfuegbar_ab)],
-                  ['Adresse', `${inserat.plz} ${inserat.stadt}`],
+                  ['Baujahr', inserat.baujahr ? String(inserat.baujahr) : '–'],
+                  ['Heizung', inserat.heizungsart ?? '–'],
+                  ['Energieträger', inserat.energietraeger ?? '–'],
+                  ['Zustand', inserat.objektzustand ?? '–'],
                 ].map(([k, v]) => (
-                  <div key={k} className="flex items-center justify-between border-b border-[#F5F5F3] py-3.5">
-                    <dt className="text-[14px] text-foreground-tertiary">{k}</dt>
+                  <div key={k} className="flex items-center justify-between border-b border-border py-3.5">
+                    <dt className="text-[14px] text-muted-foreground">{k}</dt>
                     <dd className="text-[14px] font-semibold text-foreground">{v}</dd>
                   </div>
                 ))}
               </dl>
             </section>
+
+            <div className="mb-10 h-px bg-border" />
+
+            {/* 10. Energieausweis */}
+            {(inserat.energieklasse || inserat.energieverbrauch != null) && (
+              <>
+                <section className="mb-10">
+                  <h2 className="mb-5 text-[18px] font-bold text-foreground">Energieausweis</h2>
+                  <div className="flex flex-wrap items-center gap-6 rounded-xl bg-muted p-6">
+                    {inserat.energieklasse && (
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#1A6B3C] text-[40px] font-bold text-white">
+                        {inserat.energieklasse}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      {inserat.energieverbrauch != null && (
+                        <p className="text-[24px] font-bold text-foreground">
+                          {inserat.energieverbrauch.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{' '}
+                          <span className="text-[14px] font-medium text-muted-foreground">kWh / (m²·a)</span>
+                        </p>
+                      )}
+                      {inserat.energieausweis_typ && (
+                        <p className="mt-1 text-[13px] text-muted-foreground">{inserat.energieausweis_typ}</p>
+                      )}
+                    </div>
+                  </div>
+                </section>
+                <div className="mb-10 h-px bg-border" />
+              </>
+            )}
+
+            {/* 11. Stichwörter */}
+            {inserat.stichwoerter && inserat.stichwoerter.length > 0 && (
+              <>
+                <section className="mb-10">
+                  <h2 className="mb-5 text-[18px] font-bold text-foreground">Stichwörter</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {inserat.stichwoerter.map(tag => (
+                      <span key={tag} className="rounded-full bg-muted px-4 py-2 text-[13px] font-medium text-foreground">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+                <div className="mb-10 h-px bg-border" />
+              </>
+            )}
+
+            {/* 12. Besichtigungshinweise */}
+            {inserat.besichtigungshinweise && (
+              <section>
+                <h2 className="mb-3 text-[18px] font-bold text-foreground">Besichtigungshinweise</h2>
+                <p className="text-[15px] leading-[1.7] text-muted-foreground">{inserat.besichtigungshinweise}</p>
+              </section>
+            )}
           </div>
 
-          {/* RIGHT — sticky price card (desktop only) */}
+          {/* RIGHT — sticky price card */}
           <aside className="hidden md:block">
             <div className="sticky top-[88px]">
-              <div className="rounded-[20px] border border-[#EBEBEB] bg-white p-7">
-                <p className="text-[28px] font-bold tracking-[-0.5px] text-foreground">{priceLabel}</p>
-                <p className="mb-6 mt-1 text-[14px] text-foreground-tertiary">{periodLabel}</p>
+              <div className="rounded-[20px] bg-card p-7 shadow-card">
+                <div className="space-y-1">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[13px] text-muted-foreground">{kaltLabel}</span>
+                    <span className="text-[20px] font-bold text-foreground">{formatEUR(inserat.preis)}</span>
+                  </div>
+                  {inserat.warmmiete != null && !isKauf && (
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[13px] text-muted-foreground">Warmmiete</span>
+                      <span className="text-[28px] font-bold tracking-[-0.5px] text-foreground">{formatEUR(inserat.warmmiete)}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="mb-6 mt-1 text-[14px] text-muted-foreground">{periodLabel}</p>
 
-                <div className="mb-6 h-px bg-[#EBEBEB]" />
+                <div className="mb-6 h-px bg-border" />
 
                 <div className="mb-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#EBEBEB] bg-[#F5F5F3] text-[14px] font-semibold text-foreground-secondary">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-[14px] font-semibold text-foreground">
                     {initials}
                   </div>
                   <div>
                     <p className="text-[14px] font-semibold text-foreground">{ownerName}</p>
-                    <p className="text-[12px] text-foreground-tertiary">Mitglied seit {memberSince}</p>
+                    <p className="text-[12px] text-muted-foreground">Mitglied seit {memberSince}</p>
                   </div>
                 </div>
 
@@ -187,17 +322,17 @@ const InseratDetail = () => {
                 >
                   Anfrage senden
                 </button>
-                <button className="mb-6 w-full rounded-full border-[1.5px] border-foreground bg-transparent px-4 py-3.5 text-[15px] font-semibold text-foreground transition-colors hover:bg-neutral">
+                <button className="mb-6 w-full rounded-full border-[1.5px] border-foreground bg-transparent px-4 py-3.5 text-[15px] font-semibold text-foreground transition-colors hover:bg-muted">
                   Anbieter anrufen
                 </button>
 
-                <div className="rounded-xl bg-[#F5F5F3] p-4">
+                <div className="rounded-xl bg-muted p-4">
                   {[
                     'Kostenlos & ohne Provision',
                     'Direkte Kommunikation',
                     'Sicher & transparent',
                   ].map((t, i, a) => (
-                    <div key={t} className={cn('flex items-center gap-2 text-[13px] text-foreground-secondary', i < a.length - 1 && 'mb-2')}>
+                    <div key={t} className={cn('flex items-center gap-2 text-[13px] text-muted-foreground', i < a.length - 1 && 'mb-2')}>
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-[#1A6B3C]" />
                       {t}
                     </div>
@@ -210,10 +345,14 @@ const InseratDetail = () => {
       </main>
 
       {/* Mobile sticky bottom bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between border-t border-[#EBEBEB] bg-white px-6 py-4 md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between border-t border-border bg-card px-6 py-4 md:hidden">
         <div>
-          <p className="text-[20px] font-bold leading-none text-foreground">€ {inserat.preis.toLocaleString('de-DE')}</p>
-          <p className="mt-0.5 text-[13px] text-foreground-tertiary">{periodLabel}</p>
+          <p className="text-[20px] font-bold leading-none text-foreground">
+            {formatEUR(inserat.warmmiete ?? inserat.preis)}
+          </p>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
+            {inserat.warmmiete ? 'Warmmiete' : periodLabel}
+          </p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
@@ -237,7 +376,7 @@ const InseratDetail = () => {
 };
 
 /* ============================================================
-   AnfrageModal — inline custom design per spec
+   AnfrageModal
    ============================================================ */
 function AnfrageModal({ titel, ownerName, onClose }: { titel: string; ownerName: string; onClose: () => void }) {
   const [sent, setSent] = useState(false);
@@ -250,8 +389,8 @@ function AnfrageModal({ titel, ownerName, onClose }: { titel: string; ownerName:
     setSent(true);
   };
 
-  const inputClass = 'w-full rounded-[10px] border-[1.5px] border-transparent bg-[#F5F5F3] px-[18px] py-3.5 text-[15px] text-foreground transition-colors placeholder:text-foreground-tertiary focus:border-foreground focus:bg-white focus:outline-none';
-  const labelClass = 'mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground-tertiary';
+  const inputClass = 'w-full rounded-[10px] border-[1.5px] border-transparent bg-muted px-[18px] py-3.5 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground focus:border-foreground focus:bg-background focus:outline-none';
+  const labelClass = 'mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground';
 
   return (
     <>
@@ -259,13 +398,13 @@ function AnfrageModal({ titel, ownerName, onClose }: { titel: string; ownerName:
       <div
         role="dialog"
         aria-modal="true"
-        className="fixed left-1/2 top-1/2 z-[51] w-[calc(100vw-32px)] max-w-[520px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.16)]"
+        className="fixed left-1/2 top-1/2 z-[51] w-[calc(100vw-32px)] max-w-[520px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl bg-card p-8 shadow-card"
         style={{ maxHeight: '90vh' }}
       >
         <button
           onClick={onClose}
           aria-label="Schließen"
-          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F5F3] text-foreground-secondary transition-colors hover:bg-[#EBEBEB]"
+          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-border"
         >
           <X className="h-4 w-4" />
         </button>
@@ -276,10 +415,10 @@ function AnfrageModal({ titel, ownerName, onClose }: { titel: string; ownerName:
               <Check className="h-7 w-7 text-[#1A6B3C]" />
             </div>
             <h3 className="text-[20px] font-bold text-foreground">Anfrage gesendet!</h3>
-            <p className="mt-1.5 text-[14px] text-foreground-secondary">{ownerName} wurde benachrichtigt.</p>
+            <p className="mt-1.5 text-[14px] text-muted-foreground">{ownerName} wurde benachrichtigt.</p>
             <button
               onClick={onClose}
-              className="mt-6 rounded-full bg-[#F5F5F3] px-6 py-3 text-[14px] font-semibold text-foreground transition-colors hover:bg-[#EBEBEB]"
+              className="mt-6 rounded-full bg-muted px-6 py-3 text-[14px] font-semibold text-foreground transition-colors hover:bg-border"
             >
               Schließen
             </button>
@@ -287,7 +426,7 @@ function AnfrageModal({ titel, ownerName, onClose }: { titel: string; ownerName:
         ) : (
           <>
             <h2 className="text-[22px] font-bold text-foreground">Anfrage senden</h2>
-            <p className="mb-7 mt-1.5 text-[14px] text-foreground-tertiary">{titel}</p>
+            <p className="mb-7 mt-1.5 text-[14px] text-muted-foreground">{titel}</p>
 
             <form onSubmit={submit} className="space-y-5">
               <div className="grid grid-cols-2 gap-3">
