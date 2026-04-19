@@ -1,69 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   HEYSPACES DESIGN SYSTEM — ElevenLabs Inspired
+   Two-layer tokens:
+   1) HSL semantic tokens for shadcn (do not remove)
+   2) Raw --color-* / --shadow-* tokens for new utilities
+   ============================================ */
+
 @layer base {
   :root {
-    /* Backgrounds */
-    --background: 60 14% 95%;          /* #FAFAF8 */
-    --surface: 0 0% 100%;              /* #FFFFFF */
-    --sand: 36 19% 92%;                /* #F0EDE8 — warm sand */
-    --neutral: 60 8% 95%;              /* #F5F5F3 */
-    --dark: 0 0% 5%;                   /* #0C0C0C */
+    /* ---- shadcn HSL semantic layer (remapped to new palette) ---- */
+    --background: 0 0% 100%;             /* #ffffff */
+    --surface: 0 0% 100%;                /* #ffffff */
+    --sand: 30 15% 95%;                  /* #f5f2ef warm */
+    --neutral: 0 0% 96.1%;               /* #f5f5f5 */
+    --dark: 0 0% 0%;                     /* #000000 */
 
-    --foreground: 0 0% 5%;             /* #0C0C0C */
-    --foreground-secondary: 0 0% 42%;  /* #6B6B6B */
-    --foreground-tertiary: 0 0% 66%;   /* #A8A8A8 */
+    --foreground: 0 0% 0%;               /* #000000 */
+    --foreground-secondary: 0 0% 31%;    /* #4e4e4e */
+    --foreground-tertiary: 30 5% 46%;    /* #777169 warm muted */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 5%;
+    --card-foreground: 0 0% 0%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 0 0% 5%;                /* #0C0C0C */
+    --primary: 0 0% 0%;                  /* #000000 */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 0 0% 16%;         /* #2A2A2A */
+    --primary-hover: 0 0% 13%;           /* #212121 */
 
-    --secondary: 60 8% 95%;            /* #F5F5F3 */
-    --secondary-foreground: 0 0% 5%;
+    --secondary: 0 0% 96.1%;             /* #f5f5f5 */
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 60 8% 95%;
-    --muted-foreground: 0 0% 42%;
+    --muted: 0 0% 96.1%;                 /* #f5f5f5 */
+    --muted-foreground: 30 5% 46%;       /* #777169 */
 
-    --accent: 36 19% 92%;              /* sand */
-    --accent-foreground: 0 0% 5%;
+    --accent: 30 15% 95%;                /* #f5f2ef warm */
+    --accent-foreground: 0 0% 0%;
 
-    --destructive: 0 70% 36%;          /* #9B1C1C */
+    --destructive: 0 70% 36%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Status pairs (bg / text) */
-    --status-green-bg: 145 47% 93%;    /* #E8F5EE */
-    --status-green-fg: 145 60% 26%;    /* #1A6B3C */
-    --status-blue-bg: 220 89% 95%;     /* #E8F0FE */
-    --status-blue-fg: 224 74% 39%;     /* #1A3FAB */
-    --status-yellow-bg: 41 93% 95%;    /* #FEF6E4 */
-    --status-yellow-fg: 39 100% 27%;   /* #8A5A00 */
-    --status-red-bg: 0 89% 95%;        /* #FEE8E8 */
-    --status-red-fg: 0 70% 36%;        /* #9B1C1C */
+    /* Status pairs (preserved) */
+    --status-green-bg: 145 47% 93%;
+    --status-green-fg: 145 60% 26%;
+    --status-blue-bg: 220 89% 95%;
+    --status-blue-fg: 224 74% 39%;
+    --status-yellow-bg: 41 93% 95%;
+    --status-yellow-fg: 39 100% 27%;
+    --status-red-bg: 0 89% 95%;
+    --status-red-fg: 0 70% 36%;
 
     /* Borders */
-    --border: 0 0% 92%;                /* #EBEBEB */
-    --border-default: 36 11% 85%;      /* #E0DDD8 */
-    --border-strong: 38 11% 76%;       /* #C8C4BC */
-    --input: 0 0% 92%;
-    --ring: 0 0% 5%;
+    --border: 0 0% 89.8%;                /* #e5e5e5 */
+    --border-default: 0 0% 89.8%;        /* #e5e5e5 */
+    --border-strong: 0 0% 80%;
+    --input: 0 0% 89.8%;
+    --ring: 213 94% 80%;                 /* blue focus */
 
-    --radius: 1rem;                    /* 16px cards */
+    --radius: 1rem;                      /* 16px cards */
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 0 0% 0%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96.1%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 89.8%;
+    --sidebar-ring: 213 94% 80%;
+
+    /* ---- Raw design tokens (new layer) ---- */
+    --color-bg:            #ffffff;
+    --color-bg-secondary:  #f5f5f5;
+    --color-bg-warm:       #f5f2ef;
+    --color-bg-warm-glass: rgba(245, 242, 239, 0.8);
+    --color-bg-alt-light:  #f6f6f6;
+
+    --color-text-primary:   #000000;
+    --color-text-secondary: #4e4e4e;
+    --color-text-muted:     #777169;
+
+    --color-border:        #e5e5e5;
+    --color-border-subtle: rgba(0, 0, 0, 0.05);
+
+    --color-grid-overlay:  rgba(127, 255, 255, 0.25);
+    --color-focus-ring:    rgb(147 197 253 / 0.5);
+
+    /* Shadow system — sub-0.1 opacity, multi-layer */
+    --shadow-inset:      rgba(0,0,0,0.075) 0px 0px 0px 0.5px inset;
+    --shadow-inset-dark: rgba(0,0,0,0.1) 0px 0px 0px 0.5px inset;
+    --shadow-outline:    rgba(0,0,0,0.06) 0px 0px 0px 1px;
+    --shadow-elevation:  rgba(0,0,0,0.04) 0px 4px 4px;
+    --shadow-card:       rgba(0,0,0,0.06) 0px 0px 0px 1px,
+                         rgba(0,0,0,0.04) 0px 1px 2px,
+                         rgba(0,0,0,0.04) 0px 2px 4px;
+    --shadow-button:     rgba(0,0,0,0.4) 0px 0px 1px,
+                         rgba(0,0,0,0.04) 0px 4px 4px;
+    --shadow-warm:       rgba(78, 50, 23, 0.04) 0px 6px 16px;
+    --shadow-edge:       rgba(0,0,0,0.08) 0px 0px 0px 0.5px;
+    --shadow-inset-ring: rgba(0,0,0,0.1) 0px 0px 0px 1px inset;
+
+    /* Typography */
+    --font-display: 'Waldenburg', 'Georgia', serif;
+    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:    'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 }
 
@@ -79,26 +124,174 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-feature-settings: "cv11", "ss01";
-    letter-spacing: -0.01em;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.5;
+    letter-spacing: 0.16px;
   }
 
-  h1, h2, h3, h4 {
-    letter-spacing: -0.02em;
+  /* Display headings — Waldenburg weight 300 */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 300;
+    color: var(--color-text-primary);
+  }
+
+  h1 {
+    font-size: 3rem;       /* 48px */
+    line-height: 1.08;
+    letter-spacing: -0.96px;
+  }
+  h2 {
+    font-size: 2.25rem;    /* 36px */
+    line-height: 1.17;
+    letter-spacing: normal;
+  }
+  h3 {
+    font-size: 2rem;       /* 32px */
+    line-height: 1.13;
+    letter-spacing: normal;
+  }
+
+  /* h4+ stays Inter */
+  h4 {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 1.25rem;
+    line-height: 1.35;
+    color: var(--color-text-primary);
+  }
+  h5, h6 {
+    font-family: var(--font-body);
+    font-weight: 500;
+    color: var(--color-text-primary);
   }
 }
 
 @layer utilities {
-  .label-eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground-tertiary;
+  /* Typography utilities */
+  .text-body-lg {
+    font-family: var(--font-body);
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--color-text-secondary);
   }
+  .text-body {
+    font-family: var(--font-body);
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: 0.18px;
+    color: var(--color-text-secondary);
+  }
+  .text-body-ui {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0.16px;
+    color: var(--color-text-secondary);
+  }
+  .text-body-medium {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0.16px;
+    color: var(--color-text-primary);
+  }
+  .text-nav {
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.47;
+    letter-spacing: 0.15px;
+    color: var(--color-text-primary);
+  }
+  .text-caption {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0.14px;
+    color: var(--color-text-muted);
+  }
+  .text-tag {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.38;
+  }
+  .text-micro {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.33;
+    color: var(--color-text-muted);
+  }
+  .text-fine {
+    font-family: var(--font-body);
+    font-size: 0.625rem;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+  .label-eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em];
+    color: var(--color-text-muted);
+  }
+  .font-display { font-family: var(--font-display); font-weight: 300; }
+  .font-mono    { font-family: var(--font-mono); }
+
+  /* Layout */
   .container-page {
-    @apply mx-auto w-full max-w-[1200px] px-6 md:px-12;
+    @apply mx-auto w-full max-w-[1200px] px-6;
   }
   .section-pad {
-    @apply py-20 md:py-32;
+    @apply py-20;
   }
+  .section-alt {
+    background: var(--color-bg-secondary);
+  }
+  .bg-warm {
+    background: var(--color-bg-warm);
+  }
+
+  /* Shadow utilities */
+  .shadow-card    { box-shadow: var(--shadow-card); }
+  .shadow-button  { box-shadow: var(--shadow-button); }
+  .shadow-warm    { box-shadow: var(--shadow-warm); }
+  .shadow-inset-edge { box-shadow: var(--shadow-inset); }
+  .shadow-outline-ring { box-shadow: var(--shadow-outline); }
+
+  /* Card variants */
+  .card-flat {
+    background: var(--color-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+  }
+  .card-warm {
+    background: var(--color-bg-warm);
+    border-radius: 16px;
+    box-shadow: var(--shadow-warm);
+  }
+
+  /* Featured warm CTA button */
+  .btn-warm {
+    background: var(--color-bg-warm-glass);
+    color: var(--color-text-primary);
+    border-radius: 30px;
+    padding: 12px 20px 12px 14px;
+    box-shadow: var(--shadow-warm);
+    backdrop-filter: blur(4px);
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  .btn-warm:hover  { opacity: 0.85; }
+  .btn-warm:active { transform: scale(0.98); }
 }
 
 @media (prefers-reduced-motion: reduce) {
