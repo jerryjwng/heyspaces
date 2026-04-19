@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Heart, Home, Plus } from 'lucide-react';
+import { Search, Heart, Home, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { useAuthContext } from '@/contexts/auth-context';
 import { mockUsers } from '@/lib/mock-data';
@@ -45,7 +45,7 @@ const requestStatusLabel: Record<'offen' | 'gesehen' | 'beantwortet', string> = 
   beantwortet: 'Beantwortet',
 };
 
-const StatCard = ({ label, value, sub, accent, delay }: { label: string; value: string; sub?: string; accent?: boolean; delay: number }) => (
+const StatCard = ({ label, value, sub, accent, delay, icon: Icon }: { label: string; value: string; sub?: string; accent?: boolean; delay: number; icon: LucideIcon }) => (
   <div
     className={cn(
       'rounded-2xl border px-7 py-6 opacity-0 animate-fade-in',
@@ -53,7 +53,10 @@ const StatCard = ({ label, value, sub, accent, delay }: { label: string; value: 
     )}
     style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
   >
-    <p className={cn('label-eyebrow mb-3', accent && 'text-status-green-fg')}>{label}</p>
+    <div className="mb-3 flex items-center justify-between">
+      <p className={cn('label-eyebrow', accent && 'text-status-green-fg')}>{label}</p>
+      <Icon className={cn('h-[18px] w-[18px]', accent ? 'text-status-green-fg' : 'text-foreground-tertiary')} strokeWidth={1.75} />
+    </div>
     <p className="text-[40px] font-bold leading-none tracking-[-0.03em] text-foreground">{value}</p>
     {sub && <p className="mt-2 text-[13px] text-foreground-tertiary">{sub}</p>}
   </div>
@@ -130,9 +133,9 @@ const SuchenView = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) 
   <>
     {/* Stats */}
     <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-      <StatCard label="Gespeicherte Inserate" value="12" delay={0} />
-      <StatCard label="Gesendete Anfragen" value="5" sub="2 noch offen" delay={80} />
-      <StatCard label="Neue Inserate heute" value="24" sub="in deiner Umgebung" delay={160} />
+      <StatCard label="Gespeicherte Inserate" value="12" delay={0} icon={Bookmark} />
+      <StatCard label="Gesendete Anfragen" value="5" sub="2 noch offen" delay={80} icon={Send} />
+      <StatCard label="Neue Inserate heute" value="24" sub="in deiner Umgebung" delay={160} icon={Sparkles} />
     </div>
 
     {/* Letzte Suchen */}
@@ -203,9 +206,9 @@ const AnbietenView = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }
   <>
     {/* Stats */}
     <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-      <StatCard label="Aktive Inserate" value="3" delay={0} />
-      <StatCard label="Neue Anfragen" value="8" sub="seit letzter Woche" accent delay={80} />
-      <StatCard label="Inserate Aufrufe" value="142" sub="diese Woche" delay={160} />
+      <StatCard label="Aktive Inserate" value="3" delay={0} icon={Building2} />
+      <StatCard label="Neue Anfragen" value="8" sub="seit letzter Woche" accent delay={80} icon={Inbox} />
+      <StatCard label="Inserate Aufrufe" value="142" sub="diese Woche" delay={160} icon={Eye} />
     </div>
 
     {/* Meine Inserate */}
