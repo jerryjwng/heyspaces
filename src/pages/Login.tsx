@@ -78,8 +78,13 @@ const Login = () => {
       } else {
         await signUp(email, password, { vorname, nachname });
       }
-      await new Promise(r => setTimeout(r, 500));
       navigate('/dashboard');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Bitte überprüfe deine Eingaben.';
+      // Surface on the most relevant field
+      if (msg.includes('E-Mail') && msg.includes('registriert')) setErrors({ email: msg });
+      else if (msg.includes('Passwort')) setErrors({ password: msg });
+      else setErrors({ password: msg });
     } finally {
       setLoading(false);
     }

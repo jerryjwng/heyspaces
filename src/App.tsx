@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Anfragen from "./pages/Anfragen";
 import Profil from "./pages/Profil";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "@/components/shared/protected-route";
 
 const queryClient = new QueryClient();
 
@@ -28,13 +29,13 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/inserate" element={<InserateListing />} />
             <Route path="/inserate/:id" element={<InseratDetail />} />
-            <Route path="/inserate/neu" element={<InseratNeu />} />
-            <Route path="/inserate/:id/bearbeiten" element={<InseratNeu />} />
+            <Route path="/inserate/neu" element={<ProtectedRoute><InseratNeu /></ProtectedRoute>} />
+            <Route path="/inserate/:id/bearbeiten" element={<ProtectedRoute><InseratNeu /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/registrieren" element={<Registrieren />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/anfragen" element={<Anfragen />} />
-            <Route path="/profil" element={<Profil />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/anfragen" element={<ProtectedRoute><Anfragen /></ProtectedRoute>} />
+            <Route path="/profil" element={<ProtectedRoute><Profil /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

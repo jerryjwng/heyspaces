@@ -137,6 +137,45 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          has_listings: boolean
+          has_requests: boolean
+          id: string
+          nachname: string
+          stadt: string | null
+          telefon: string | null
+          updated_at: string
+          vorname: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          has_listings?: boolean
+          has_requests?: boolean
+          id: string
+          nachname?: string
+          stadt?: string | null
+          telefon?: string | null
+          updated_at?: string
+          vorname?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          has_listings?: boolean
+          has_requests?: boolean
+          id?: string
+          nachname?: string
+          stadt?: string | null
+          telefon?: string | null
+          updated_at?: string
+          vorname?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

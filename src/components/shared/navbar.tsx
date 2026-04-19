@@ -17,6 +17,11 @@ export function Navbar({ onSearchClick, hideSearch = false }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   const baseLinks = user
     ? [
         { label: 'Inserate', href: '/inserate' },
@@ -114,7 +119,7 @@ export function Navbar({ onSearchClick, hideSearch = false }: NavbarProps) {
                     <UserCog className="mr-2 h-4 w-4" /> Profil bearbeiten
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="my-1 bg-border" />
-                  <DropdownMenuItem onClick={signOut} className="rounded-lg px-3 py-2.5 text-sm text-status-red-fg focus:bg-neutral focus:text-status-red-fg">
+                  <DropdownMenuItem onClick={handleSignOut} className="rounded-lg px-3 py-2.5 text-sm text-status-red-fg focus:bg-neutral focus:text-status-red-fg">
                     <LogOut className="mr-2 h-4 w-4" /> Abmelden
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -179,7 +184,7 @@ export function Navbar({ onSearchClick, hideSearch = false }: NavbarProps) {
                     <SheetClose asChild>
                       <Link to="/dashboard" className="text-sm text-foreground-secondary hover:text-foreground">Mein Dashboard</Link>
                     </SheetClose>
-                    <button onClick={signOut} className="text-left text-sm text-status-red-fg">Abmelden</button>
+                    <button onClick={handleSignOut} className="text-left text-sm text-status-red-fg">Abmelden</button>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
