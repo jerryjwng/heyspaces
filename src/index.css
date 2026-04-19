@@ -239,7 +239,7 @@
     @apply text-[11px] font-semibold uppercase tracking-[0.12em];
     color: var(--color-text-muted);
   }
-  .font-display { font-family: var(--font-display); font-weight: 300; }
+  .font-display { font-family: var(--font-display); font-weight: 600; }
   .font-mono    { font-family: var(--font-mono); }
 
   /* Layout */
