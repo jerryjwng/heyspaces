@@ -273,14 +273,9 @@ const AnbietenView = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }
           key={i}
           className="flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-background"
         >
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-neutral text-[13px] font-semibold text-foreground-secondary">
-              {a.initials}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{a.name}</p>
-              <p className="mt-0.5 text-[12px] text-foreground-secondary">{a.sub}</p>
-            </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{a.name}</p>
+            <p className="mt-0.5 text-[12px] text-foreground-secondary">{a.sub}</p>
           </div>
           <div className="flex flex-col items-end gap-1.5">
             <span className="text-[11px] text-foreground-tertiary">{a.date}</span>
