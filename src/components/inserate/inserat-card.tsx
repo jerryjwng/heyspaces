@@ -97,7 +97,7 @@ export function InseratCard({ inserat, isFavorite = false, onFavorite }: Inserat
 
         {/* Owner footer */}
         {inserat.owner && (
-          <div className="flex items-center gap-2.5 border-t border-border px-5 py-3.5">
+          <div className="gap-2.5 border-t border-border px-5 py-3.5 flex items-center justify-start font-sans">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral text-[11px] font-semibold text-foreground-secondary">
               {initials}
             </span>
