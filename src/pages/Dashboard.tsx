@@ -83,7 +83,7 @@ const Dashboard = () => {
       <Navbar />
 
       {/* Dashboard header */}
-      <div className="border-b border-border bg-surface">
+      <div>
         <div className="mx-auto flex max-w-[1200px] flex-col gap-5 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-12">
           <div>
             <h1 className="text-[26px] font-bold tracking-[-0.015em] text-foreground">
@@ -92,7 +92,7 @@ const Dashboard = () => {
             <p className="mt-1 text-sm text-foreground-secondary">Was möchtest du heute tun?</p>
           </div>
 
-          <div className="flex w-full rounded-pill bg-neutral p-1 md:w-auto">
+          <div className="flex w-full rounded-pill bg-surface p-1 md:w-auto">
             {(['suchen', 'anbieten'] as Mode[]).map(m => (
               <button
                 key={m}
