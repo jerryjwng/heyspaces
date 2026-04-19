@@ -22,8 +22,8 @@ export function InseratCard({ inserat, isFavorite = false, onFavorite }: Inserat
     <Link to={`/inserate/${inserat.id}`} className="group block">
       <article
         className={cn(
-          'overflow-hidden rounded-2xl bg-surface transition-all duration-200 ease-out',
-          'hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]',
+          'overflow-hidden rounded-2xl bg-surface shadow-card transition-all duration-200 ease-out',
+          'hover:-translate-y-1 hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]',
           isInactive && 'opacity-60'
         )}
       >
