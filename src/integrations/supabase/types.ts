@@ -14,7 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inserate: {
+        Row: {
+          angebotstyp: string
+          ausstattung_aussen: string[]
+          ausstattung_innen: string[]
+          baujahr: number | null
+          beschreibung: string
+          besichtigungshinweise: string | null
+          bilder: string[]
+          created_at: string
+          energieausweis_typ: string | null
+          energieklasse: string | null
+          energietraeger: string | null
+          energieverbrauch: number | null
+          etage: number | null
+          flaeche: number
+          gesamtgeschosse: number | null
+          hausnummer: string | null
+          heizkosten: number | null
+          heizungsart: string | null
+          id: string
+          kategorie: string
+          kaution: number | null
+          nebenkosten: number | null
+          objekttyp: string | null
+          objektzustand: string | null
+          plz: string
+          preis: number
+          preis_pro_qm: number | null
+          stadt: string
+          stadtteil: string | null
+          status: string
+          stichwoerter: string[]
+          strasse: string
+          titel: string
+          updated_at: string
+          user_id: string
+          verfuegbar_ab: string | null
+          warmmiete: number | null
+          zimmer: number
+        }
+        Insert: {
+          angebotstyp?: string
+          ausstattung_aussen?: string[]
+          ausstattung_innen?: string[]
+          baujahr?: number | null
+          beschreibung?: string
+          besichtigungshinweise?: string | null
+          bilder?: string[]
+          created_at?: string
+          energieausweis_typ?: string | null
+          energieklasse?: string | null
+          energietraeger?: string | null
+          energieverbrauch?: number | null
+          etage?: number | null
+          flaeche?: number
+          gesamtgeschosse?: number | null
+          hausnummer?: string | null
+          heizkosten?: number | null
+          heizungsart?: string | null
+          id?: string
+          kategorie?: string
+          kaution?: number | null
+          nebenkosten?: number | null
+          objekttyp?: string | null
+          objektzustand?: string | null
+          plz?: string
+          preis?: number
+          preis_pro_qm?: number | null
+          stadt?: string
+          stadtteil?: string | null
+          status?: string
+          stichwoerter?: string[]
+          strasse?: string
+          titel: string
+          updated_at?: string
+          user_id: string
+          verfuegbar_ab?: string | null
+          warmmiete?: number | null
+          zimmer?: number
+        }
+        Update: {
+          angebotstyp?: string
+          ausstattung_aussen?: string[]
+          ausstattung_innen?: string[]
+          baujahr?: number | null
+          beschreibung?: string
+          besichtigungshinweise?: string | null
+          bilder?: string[]
+          created_at?: string
+          energieausweis_typ?: string | null
+          energieklasse?: string | null
+          energietraeger?: string | null
+          energieverbrauch?: number | null
+          etage?: number | null
+          flaeche?: number
+          gesamtgeschosse?: number | null
+          hausnummer?: string | null
+          heizkosten?: number | null
+          heizungsart?: string | null
+          id?: string
+          kategorie?: string
+          kaution?: number | null
+          nebenkosten?: number | null
+          objekttyp?: string | null
+          objektzustand?: string | null
+          plz?: string
+          preis?: number
+          preis_pro_qm?: number | null
+          stadt?: string
+          stadtteil?: string | null
+          status?: string
+          stichwoerter?: string[]
+          strasse?: string
+          titel?: string
+          updated_at?: string
+          user_id?: string
+          verfuegbar_ab?: string | null
+          warmmiete?: number | null
+          zimmer?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
