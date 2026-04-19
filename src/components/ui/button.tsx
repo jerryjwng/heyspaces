@@ -5,23 +5,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-pill text-[15px] font-semibold tracking-[-0.01em] ring-offset-background transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-pill text-[15px] font-medium tracking-[0.15px] ring-offset-background transition-[opacity,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:opacity-85 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-hover hover:-translate-y-px",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border-[1.5px] border-foreground bg-transparent text-foreground hover:bg-neutral",
-        secondary: "bg-neutral text-foreground hover:bg-[hsl(var(--border))]",
-        ghost: "rounded-md hover:bg-neutral hover:text-foreground",
+        default: "bg-primary text-primary-foreground",
+        destructive: "bg-destructive text-destructive-foreground",
+        outline: "bg-surface text-foreground shadow-button",
+        secondary: "bg-surface text-foreground shadow-button",
+        ghost: "rounded-md hover:bg-neutral hover:text-foreground hover:opacity-100",
         link: "text-foreground underline-offset-4 hover:underline rounded-md",
-        "ghost-dark": "border-[1.5px] border-white/30 text-white bg-transparent hover:border-white hover:bg-white/10",
-        surface: "bg-neutral text-foreground hover:bg-[hsl(var(--border))]",
+        "ghost-dark": "border-[1.5px] border-white/30 text-white bg-transparent hover:border-white hover:bg-white/10 hover:opacity-100",
+        surface: "bg-neutral text-foreground hover:bg-[hsl(var(--border))] hover:opacity-100",
+        warm: "bg-[hsl(var(--sand))]/80 text-foreground rounded-warm shadow-warm backdrop-blur-[4px] px-[14px] py-3 pr-5",
       },
       size: {
-        default: "h-12 px-7 py-3.5",
-        sm: "h-9 px-[18px] text-[13px] font-medium",
-        lg: "h-14 px-9 text-base",
+        default: "h-10 px-5 py-2.5",
+        sm: "h-9 px-4 text-[13px]",
+        lg: "h-12 px-7 text-base",
         icon: "h-10 w-10",
       },
     },

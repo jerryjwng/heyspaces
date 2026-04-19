@@ -15,6 +15,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Waldenburg', 'Georgia', 'serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       letterSpacing: {
         tightest: '-0.04em',
@@ -91,13 +93,16 @@ export default {
         sm: "calc(var(--radius) - 8px)",
         "2xl": "1.25rem",
         "3xl": "1.5rem",
-        pill: "100px",
+        warm: "30px",
+        pill: "9999px",
       },
       boxShadow: {
-        "card-hover": "0 20px 60px rgba(0,0,0,0.08)",
-        "dropdown": "0 8px 40px rgba(0,0,0,0.12)",
-        "modal": "0 24px 80px rgba(0,0,0,0.16)",
-        "soft": "0 4px 20px rgba(0,0,0,0.06)",
+        card: "rgba(0,0,0,0.06) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 1px 2px, rgba(0,0,0,0.04) 0px 2px 4px",
+        button: "rgba(0,0,0,0.4) 0px 0px 1px, rgba(0,0,0,0.04) 0px 4px 4px",
+        warm: "rgba(78,50,23,0.04) 0px 6px 16px",
+        outline: "rgba(0,0,0,0.06) 0px 0px 0px 1px",
+        "inset-edge": "rgba(0,0,0,0.075) 0px 0px 0px 0.5px inset",
+        edge: "rgba(0,0,0,0.08) 0px 0px 0px 0.5px",
       },
       keyframes: {
         "accordion-down": {
