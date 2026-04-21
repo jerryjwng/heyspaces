@@ -372,11 +372,14 @@ const AnbietenView = ({
             key={l.id}
             className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-3 transition-all duration-200 hover:-translate-y-px hover:border-foreground/20 hover:shadow-soft"
           >
-            <img
-              src={l.bilder?.[0] ?? IMG('photo-1502672260266-1c1ef2d93688')}
-              alt={l.titel}
-              className="h-16 w-20 flex-shrink-0 rounded-lg bg-neutral object-cover"
-            />
+            <div className="h-20 w-28 flex-shrink-0 overflow-hidden rounded-xl bg-neutral">
+              <img
+                src={l.bilder?.[0] ?? IMG('photo-1502672260266-1c1ef2d93688')}
+                alt={l.titel}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="truncate text-[15px] font-semibold text-foreground">{l.titel}</p>
               <p className="mt-1 text-[12px] text-foreground-tertiary">
