@@ -5,8 +5,11 @@ import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { InseratCard } from '@/components/inserate/inserat-card';
 import { AirbnbSearch, AirbnbSearchValues, KatFilter } from '@/components/shared/airbnb-search';
-import { mockInserate } from '@/lib/mock-data';
 import { useFavoriten } from '@/hooks/use-favoriten';
+import { supabase } from '@/integrations/supabase/client';
+import { mapInserat } from '@/lib/inserat-mapper';
+import type { Inserat } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type SortBy = 'newest' | 'price_asc' | 'price_desc' | 'size_asc';
 
@@ -26,6 +29,9 @@ const InserateListing = () => {
   const { favorites, toggle: toggleFavorite } = useFavoriten();
   const [showAll, setShowAll] = useState(false);
 
+  const [inserate, setInserate] = useState<Inserat[]>([]);
+  const [loading, setLoading] = useState(true);
+
   // Sync URL whenever values change
   useEffect(() => {
     const p = new URLSearchParams();
@@ -36,8 +42,24 @@ const InserateListing = () => {
     setSearchParams(p, { replace: true });
   }, [values, setSearchParams]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    supabase
+      .from('inserate')
+      .select('*')
+      .eq('status', 'aktiv')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setInserate((data ?? []).map(r => mapInserat(r)));
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   const filtered = useMemo(() => {
-    let result = mockInserate.filter(i => {
+    let result = inserate.filter(i => {
       if (values.ort && !i.stadt.toLowerCase().includes(values.ort.toLowerCase())) return false;
       if (values.kategorie !== 'alle' && i.kategorie !== values.kategorie) return false;
       if (values.maxPreis && i.preis > Number(values.maxPreis)) return false;
@@ -51,7 +73,7 @@ const InserateListing = () => {
       default: result = [...result].sort((a, b) => b.created_at.localeCompare(a.created_at));
     }
     return result;
-  }, [values, sortBy]);
+  }, [inserate, values, sortBy]);
 
   const visible = showAll ? filtered : filtered.slice(0, PAGE_SIZE);
   const remaining = filtered.length - visible.length;
@@ -98,7 +120,27 @@ const InserateListing = () => {
 
       {/* Grid or empty */}
       <div className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-20 md:px-12">
-        {visible.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="overflow-hidden rounded-[28px] bg-surface p-3 shadow-card">
+                <div className="flex items-start gap-3 px-2 pt-2">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2 px-2">
+                  <Skeleton className="h-7 w-16 rounded-full" />
+                  <Skeleton className="h-7 w-20 rounded-full" />
+                  <Skeleton className="h-7 w-24 rounded-full" />
+                </div>
+                <Skeleton className="mt-4 aspect-[4/3] w-full rounded-[20px]" />
+              </div>
+            ))}
+          </div>
+        ) : visible.length === 0 ? (
           <div className="flex flex-col items-center py-20 text-center">
             <Search className="h-12 w-12 text-border-strong" strokeWidth={1.5} />
             <h2 className="mt-6 text-xl font-semibold text-foreground">Keine Inserate gefunden</h2>

@@ -1,11 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { MapPin, CheckCircle2, ChevronLeft, Images, Calendar, Square, DoorOpen, Building2, Sparkles } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { AnfrageModal } from '@/components/shared/anfrage-modal';
-import { mockInserate } from '@/lib/mock-data';
+import { supabase } from '@/integrations/supabase/client';
+import { mapInserat } from '@/lib/inserat-mapper';
+import type { Inserat } from '@/lib/types';
 import { KATEGORIE_LABELS } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 const GALLERY_IMAGES = [
@@ -37,14 +40,86 @@ const InseratDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
+  const [inserat, setInserat] = useState<Inserat | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const inserat = useMemo(() => mockInserate.find(i => i.id === id) ?? mockInserate[0], [id]);
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setLoading(true);
+    setNotFound(false);
+    (async () => {
+      const { data: row } = await supabase
+        .from('inserate')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!row) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, vorname, nachname, created_at')
+        .eq('id', row.user_id)
+        .maybeSingle();
+      if (cancelled) return;
+      setInserat(mapInserat(row, profile));
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
 
-  const ownerName = inserat.owner ? `${inserat.owner.vorname} ${inserat.owner.nachname}` : 'Anbieter';
-  const initials = inserat.owner ? `${inserat.owner.vorname[0]}${inserat.owner.nachname[0]}` : '··';
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <Navbar hideSearch />
+        <main className="mx-auto w-full max-w-[1200px] flex-1 px-6 py-10 md:px-12">
+          <Skeleton className="mb-6 h-4 w-64" />
+          <Skeleton className="mb-10 h-[480px] w-full rounded-[20px]" />
+          <div className="grid grid-cols-1 gap-14 md:grid-cols-[1fr_380px]">
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+            <Skeleton className="h-[420px] w-full rounded-[20px]" />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (notFound || !inserat) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <Navbar hideSearch />
+        <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col items-center justify-center px-6 py-20 text-center md:px-12">
+          <h1 className="text-3xl font-bold text-foreground">Inserat nicht gefunden</h1>
+          <p className="mt-3 text-foreground-secondary">Dieses Inserat existiert nicht oder wurde entfernt.</p>
+          <button
+            onClick={() => navigate('/inserate')}
+            className="mt-8 rounded-pill bg-foreground px-7 py-3 text-sm font-semibold text-background hover:bg-foreground/90"
+          >
+            Zurück zu Inseraten
+          </button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const ownerName = inserat.owner ? `${inserat.owner.vorname} ${inserat.owner.nachname}`.trim() || 'Anbieter' : 'Anbieter';
+  const initials = inserat.owner && (inserat.owner.vorname || inserat.owner.nachname)
+    ? `${inserat.owner.vorname[0] ?? ''}${inserat.owner.nachname[0] ?? ''}`.toUpperCase() || '··'
+    : '··';
   const memberSince = inserat.owner?.created_at
     ? new Date(inserat.owner.created_at).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
-    : 'Januar 2023';
+    : 'Januar 2026';
 
   const isKauf = inserat.angebotstyp === 'kauf' || inserat.kategorie === 'kaufen';
   const kaltLabel = isKauf ? 'Kaufpreis' : 'Kaltmiete';
