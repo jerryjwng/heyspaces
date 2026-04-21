@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Check, Loader2 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Inserat } from '@/lib/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/auth-context';
+import { toast } from '@/hooks/use-toast';
 
 interface AnfrageModalProps {
   open: boolean;
@@ -14,7 +18,11 @@ interface AnfrageModalProps {
 }
 
 export function AnfrageModal({ open, onOpenChange, inserat }: AnfrageModalProps) {
+  const { user } = useAuthContext();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     vorname: '',
     nachname: '',
@@ -24,8 +32,58 @@ export function AnfrageModal({ open, onOpenChange, inserat }: AnfrageModalProps)
     nachricht: 'Hallo, ich interessiere mich für Ihre Wohnung...',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Prefill from logged-in user
+  useEffect(() => {
+    if (open && user) {
+      setForm(f => ({
+        ...f,
+        vorname: f.vorname || user.vorname || '',
+        nachname: f.nachname || user.nachname || '',
+        email: f.email || user.email || '',
+      }));
+    }
+  }, [open, user]);
+
+  // Redirect to login if not authenticated when opening
+  useEffect(() => {
+    if (open && !user) {
+      onOpenChange(false);
+      navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+    }
+  }, [open, user, navigate, location.pathname, onOpenChange]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from('anfragen').insert({
+      inserat_id: inserat.id,
+      sender_id: user.id,
+      empfaenger_id: inserat.user_id,
+      nachricht: form.nachricht,
+      vorname: form.vorname,
+      nachname: form.nachname,
+      email: form.email || user.email,
+      telefon: form.telefon || null,
+      einzug_ab: form.einzug_ab || null,
+      status: 'offen',
+    });
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: 'Fehler beim Senden',
+        description: 'Die Anfrage konnte nicht gesendet werden. Bitte versuche es erneut.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Mark profile as having sent a request
+    await supabase.from('profiles').update({ has_requests: true }).eq('id', user.id);
     setSent(true);
   };
 
@@ -33,6 +91,8 @@ export function AnfrageModal({ open, onOpenChange, inserat }: AnfrageModalProps)
     onOpenChange(false);
     setTimeout(() => setSent(false), 300);
   };
+
+  if (!user) return null;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -80,7 +140,9 @@ export function AnfrageModal({ open, onOpenChange, inserat }: AnfrageModalProps)
                 <Label>Nachricht</Label>
                 <Textarea rows={4} value={form.nachricht} onChange={e => setForm({ ...form, nachricht: e.target.value })} required />
               </div>
-              <Button type="submit" className="w-full rounded-full">Anfrage senden</Button>
+              <Button type="submit" disabled={loading} className="w-full rounded-full">
+                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Wird gesendet…</> : 'Anfrage senden'}
+              </Button>
             </form>
           </>
         )}
