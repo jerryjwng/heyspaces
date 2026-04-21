@@ -97,11 +97,12 @@ const Dashboard = () => {
   const [sentAnfragen, setSentAnfragen] = useState<AnfrageRow[]>([]);
   const [receivedAnfragen, setReceivedAnfragen] = useState<AnfrageRow[]>([]);
   const [openCount, setOpenCount] = useState(0);
+  const [myListings, setMyListings] = useState<MyListing[]>([]);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [sentRes, recRes, openRes] = await Promise.all([
+      const [sentRes, recRes, openRes, listingsRes] = await Promise.all([
         supabase
           .from('anfragen')
           .select('id, status, created_at, vorname, nachname, inserat_id, sender_id, empfaenger_id, inserat:inserate(titel)')
@@ -119,10 +120,44 @@ const Dashboard = () => {
           .select('id', { count: 'exact', head: true })
           .eq('empfaenger_id', user.id)
           .eq('status', 'offen'),
+        supabase
+          .from('inserate')
+          .select('id, titel, stadt, zimmer, flaeche, preis, kategorie, status, bilder')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
       ]);
       setSentAnfragen((sentRes.data ?? []) as AnfrageRow[]);
       setReceivedAnfragen((recRes.data ?? []) as AnfrageRow[]);
       setOpenCount(openRes.count ?? 0);
+
+      const listings = listingsRes.data ?? [];
+      const ids = listings.map(l => l.id);
+      let counts: Record<string, number> = {};
+      if (ids.length > 0) {
+        const { data: anf } = await supabase
+          .from('anfragen')
+          .select('inserat_id')
+          .in('inserat_id', ids)
+          .eq('empfaenger_id', user.id);
+        counts = (anf ?? []).reduce<Record<string, number>>((acc, a) => {
+          acc[a.inserat_id] = (acc[a.inserat_id] ?? 0) + 1;
+          return acc;
+        }, {});
+      }
+      setMyListings(
+        listings.map(l => ({
+          id: l.id,
+          titel: l.titel,
+          stadt: l.stadt,
+          zimmer: l.zimmer,
+          flaeche: l.flaeche,
+          preis: l.preis,
+          kategorie: l.kategorie,
+          status: l.status,
+          bilder: l.bilder ?? [],
+          anfragen: counts[l.id] ?? 0,
+        }))
+      );
     })();
   }, [user]);
 
