@@ -263,21 +263,28 @@ const SuchenView = ({
         Alle ansehen →
       </Link>
     </div>
-    <div className="space-y-2">
+    <div className="space-y-3">
       {savedListings.map(l => (
         <button
           key={l.id}
           onClick={() => navigate(`/inserate/${l.id}`)}
-          className="flex w-full items-center gap-0 overflow-hidden rounded-xl border border-border bg-surface text-left transition-shadow hover:shadow-soft"
+          className="group flex w-full items-center gap-4 rounded-2xl border border-border bg-surface p-3 text-left transition-all duration-200 hover:-translate-y-px hover:border-foreground/20 hover:shadow-soft"
         >
-          <img src={l.img} alt={l.title} className="h-[76px] w-24 flex-shrink-0 bg-neutral object-cover" />
-          <div className="flex-1 px-[14px] py-[14px]">
-            <p className="text-[15px] font-bold text-foreground">{l.price}</p>
-            <p className="mt-0.5 truncate text-[13px] text-foreground-secondary">{l.title}</p>
-            <p className="mt-1 text-[12px] text-foreground-tertiary">{l.meta}</p>
+          <div className="h-20 w-28 flex-shrink-0 overflow-hidden rounded-xl bg-neutral">
+            <img
+              src={l.img}
+              alt={l.title}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+            />
           </div>
-          <div className="px-[14px]">
-            <Heart className="h-[18px] w-[18px] fill-foreground text-foreground" />
+          <div className="flex-1 min-w-0 py-1">
+            <p className="text-[15px] font-semibold tracking-[-0.01em] text-foreground">{l.price}</p>
+            <p className="mt-1 truncate text-[13px] text-foreground-secondary">{l.title}</p>
+            <p className="mt-0.5 text-[12px] text-foreground-tertiary">{l.meta}</p>
+          </div>
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-neutral text-foreground transition-colors group-hover:bg-status-red-bg">
+            <Heart className="h-[16px] w-[16px] fill-foreground text-foreground" strokeWidth={1.75} />
           </div>
         </button>
       ))}
@@ -363,13 +370,16 @@ const AnbietenView = ({
         {myListings.map(l => (
           <div
             key={l.id}
-            className="flex items-center gap-4 rounded-xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-background"
+            className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-3 transition-all duration-200 hover:-translate-y-px hover:border-foreground/20 hover:shadow-soft"
           >
-            <img
-              src={l.bilder?.[0] ?? IMG('photo-1502672260266-1c1ef2d93688')}
-              alt={l.titel}
-              className="h-16 w-20 flex-shrink-0 rounded-lg bg-neutral object-cover"
-            />
+            <div className="h-20 w-28 flex-shrink-0 overflow-hidden rounded-xl bg-neutral">
+              <img
+                src={l.bilder?.[0] ?? IMG('photo-1502672260266-1c1ef2d93688')}
+                alt={l.titel}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="truncate text-[15px] font-semibold text-foreground">{l.titel}</p>
               <p className="mt-1 text-[12px] text-foreground-tertiary">
