@@ -370,7 +370,7 @@ const AnbietenView = ({
         {myListings.map(l => (
           <div
             key={l.id}
-            className="flex items-center gap-4 rounded-xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-background"
+            className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-3 transition-all duration-200 hover:-translate-y-px hover:border-foreground/20 hover:shadow-soft"
           >
             <img
               src={l.bilder?.[0] ?? IMG('photo-1502672260266-1c1ef2d93688')}
