@@ -213,6 +213,7 @@ const Dashboard = () => {
               navigate={navigate}
               receivedAnfragen={receivedAnfragen}
               openCount={openCount}
+              myListings={myListings}
             />
           )}
         </div>
@@ -314,14 +315,23 @@ const AnbietenView = ({
   navigate,
   receivedAnfragen,
   openCount,
+  myListings,
 }: {
   navigate: ReturnType<typeof useNavigate>;
   receivedAnfragen: AnfrageRow[];
   openCount: number;
-}) => (
+  myListings: MyListing[];
+}) => {
+  const activeCount = myListings.filter(l => l.status === 'aktiv').length;
+  const formatPrice = (l: MyListing) =>
+    l.kategorie === 'kaufen'
+      ? `€ ${l.preis.toLocaleString('de-DE')}`
+      : `€ ${l.preis.toLocaleString('de-DE')} / Monat`;
+
+  return (
   <>
     <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-      <StatCard label="Aktive Inserate" value="3" delay={0} icon={Building2} />
+      <StatCard label="Aktive Inserate" value={String(activeCount)} delay={0} icon={Building2} />
       <StatCard
         label="Neue Anfragen"
         value={String(openCount)}
@@ -344,48 +354,59 @@ const AnbietenView = ({
       </button>
     </div>
 
-    <div className="space-y-2">
-      {myListings.map(l => (
-        <div
-          key={l.id}
-          className="flex items-center gap-4 rounded-xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-background"
-        >
-          <img src={l.img} alt={l.title} className="h-16 w-20 flex-shrink-0 rounded-lg bg-neutral object-cover" />
-          <div className="flex-1 min-w-0">
-            <p className="truncate text-[15px] font-semibold text-foreground">{l.title}</p>
-            <p className="mt-1 text-[12px] text-foreground-tertiary">{l.meta}</p>
-            <p className="mt-1 text-[13px] text-foreground-secondary">{l.price}</p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <span
-              className={cn(
-                'rounded-pill px-3 py-1 text-[11px] font-semibold',
-                l.status === 'aktiv' ? 'bg-status-green-bg text-status-green-fg' : 'bg-neutral text-foreground-secondary'
-              )}
-            >
-              {l.status === 'aktiv' ? 'Aktiv' : 'Inaktiv'}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => navigate(`/inserate/${l.id}/bearbeiten`)}
-                className="rounded-pill border border-border bg-transparent px-3.5 py-1 text-[12px] text-foreground-secondary transition-colors hover:border-foreground"
+    {myListings.length === 0 ? (
+      <div className="rounded-xl border border-border bg-surface px-5 py-10 text-center text-sm text-foreground-tertiary">
+        Du hast noch keine Inserate. Erstelle dein erstes Inserat.
+      </div>
+    ) : (
+      <div className="space-y-2">
+        {myListings.map(l => (
+          <div
+            key={l.id}
+            className="flex items-center gap-4 rounded-xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-background"
+          >
+            <img
+              src={l.bilder?.[0] ?? IMG('photo-1502672260266-1c1ef2d93688')}
+              alt={l.titel}
+              className="h-16 w-20 flex-shrink-0 rounded-lg bg-neutral object-cover"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="truncate text-[15px] font-semibold text-foreground">{l.titel}</p>
+              <p className="mt-1 text-[12px] text-foreground-tertiary">
+                {l.stadt} · {l.zimmer} Zi · {l.flaeche}m²
+              </p>
+              <p className="mt-1 text-[13px] text-foreground-secondary">{formatPrice(l)}</p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <span
+                className={cn(
+                  'rounded-pill px-3 py-1 text-[11px] font-semibold',
+                  l.status === 'aktiv' ? 'bg-status-green-bg text-status-green-fg' : 'bg-neutral text-foreground-secondary'
+                )}
               >
-                Bearbeiten
-              </button>
-              {l.anfragen > 0 && (
+                {l.status === 'aktiv' ? 'Aktiv' : l.status === 'reserviert' ? 'Reserviert' : l.status === 'vergeben' ? 'Vergeben' : 'Inaktiv'}
+              </span>
+              <div className="flex gap-2">
                 <button
-                  onClick={() => navigate('/anfragen')}
-                  className="rounded-pill bg-status-blue-bg px-3.5 py-1 text-[12px] font-semibold text-status-blue-fg"
+                  onClick={() => navigate(`/inserate/${l.id}`)}
+                  className="rounded-pill border border-border bg-transparent px-3.5 py-1 text-[12px] text-foreground-secondary transition-colors hover:border-foreground"
                 >
-                  Anfragen ({l.anfragen})
+                  Ansehen
                 </button>
-              )}
+                {l.anfragen > 0 && (
+                  <button
+                    onClick={() => navigate('/anfragen')}
+                    className="rounded-pill bg-status-blue-bg px-3.5 py-1 text-[12px] font-semibold text-status-blue-fg"
+                  >
+                    Anfragen ({l.anfragen})
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
-
+        ))}
+      </div>
+    )}
     <h2 className="mb-4 mt-8 text-[18px] font-bold text-foreground">Neue Anfragen</h2>
     {receivedAnfragen.length === 0 ? (
       <div className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-sm text-foreground-tertiary">
