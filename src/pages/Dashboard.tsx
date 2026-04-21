@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Heart, Home, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon } from 'lucide-react';
+import { Search, Heart, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { useAuthContext } from '@/contexts/auth-context';
-import { mockUsers } from '@/lib/mock-data';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 const IMG = (id: string, w = 200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop`;
@@ -16,23 +16,18 @@ const savedListings = [
   { id: '4', price: '€ 1.680 / Monat', title: 'Altbauwohnung am Main', meta: 'Frankfurt · 110 m² · 4 Zi.', img: IMG('photo-1522708323590-d24dbb6b0267') },
 ];
 
-const myRequests = [
-  { title: 'Helle 3-Zimmer in Schwabing', date: '15.03.2025', status: 'beantwortet' as const },
-  { title: 'WG-Zimmer Kreuzberg', date: '18.03.2025', status: 'gesehen' as const },
-  { title: 'Altbauwohnung am Main', date: '20.03.2025', status: 'offen' as const },
-];
-
-const myListings = [
-  { id: '1', title: 'Helle 3-Zimmer in Schwabing', meta: 'München · 3 Zi · 78m²', price: '€ 1.750 / Monat', status: 'aktiv' as const, anfragen: 3, img: IMG('photo-1502672260266-1c1ef2d93688') },
-  { id: '7', title: 'Kompaktes Studio Maxvorstadt', meta: 'München · 1 Zi · 32m²', price: '€ 890 / Monat', status: 'aktiv' as const, anfragen: 5, img: IMG('photo-1560448204-e02f11c3d0e2') },
-  { id: '99', title: 'Gartenhaus Nymphenburg', meta: 'München · 4 Zi · 130m²', price: '€ 2.400 / Monat', status: 'inaktiv' as const, anfragen: 0, img: IMG('photo-1484154218962-a197022b5858') },
-];
-
-const newAnfragen = [
-  { initials: 'LM', name: 'Lena Müller', sub: 'Anfrage für: Helle 3-Zimmer in Schwabing', date: 'Heute, 14:23' },
-  { initials: 'TK', name: 'Thomas Klein', sub: 'Anfrage für: Kompaktes Studio Maxvorstadt', date: 'Heute, 11:05' },
-  { initials: 'AS', name: 'Anna Schmidt', sub: 'Anfrage für: Helle 3-Zimmer in Schwabing', date: 'Gestern, 18:42' },
-];
+type AnfrageRow = {
+  id: string;
+  status: 'offen' | 'gesehen' | 'beantwortet';
+  created_at: string;
+  vorname: string;
+  nachname: string;
+  inserat_id: string;
+  sender_id: string;
+  empfaenger_id: string;
+};
+type AnfrageWithInserat = AnfrageRow & { inserat?: { titel: string } | null };
+type ReceivedWithSender = AnfrageRow & { inserat?: { titel: string } | null; sender?: { vorname: string; nachname: string } | null };
 
 const requestStatusStyle: Record<'offen' | 'gesehen' | 'beantwortet', string> = {
   offen: 'bg-status-yellow-bg text-status-yellow-fg',
