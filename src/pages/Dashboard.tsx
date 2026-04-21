@@ -1,25 +1,32 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Heart, Home, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon } from 'lucide-react';
+import { Search, Heart, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { useAuthContext } from '@/contexts/auth-context';
-import { mockUsers } from '@/lib/mock-data';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 const IMG = (id: string, w = 200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop`;
 
 type Mode = 'suchen' | 'anbieten';
+type AnfrageStatus = 'offen' | 'gesehen' | 'beantwortet';
+
+type AnfrageRow = {
+  id: string;
+  status: AnfrageStatus;
+  created_at: string;
+  vorname: string;
+  nachname: string;
+  inserat_id: string;
+  sender_id: string;
+  empfaenger_id: string;
+  inserat?: { titel: string } | null;
+};
 
 const savedListings = [
   { id: '1', price: '€ 1.750 / Monat', title: 'Helle 3-Zimmer in Schwabing', meta: 'München · 78 m² · 3 Zi.', img: IMG('photo-1502672260266-1c1ef2d93688') },
   { id: '2', price: '€ 580 / Monat', title: 'WG-Zimmer Kreuzberg', meta: 'Berlin · 18 m² · 1 Zi.', img: IMG('photo-1545324418-cc1a3fa10c00') },
   { id: '4', price: '€ 1.680 / Monat', title: 'Altbauwohnung am Main', meta: 'Frankfurt · 110 m² · 4 Zi.', img: IMG('photo-1522708323590-d24dbb6b0267') },
-];
-
-const myRequests = [
-  { title: 'Helle 3-Zimmer in Schwabing', date: '15.03.2025', status: 'beantwortet' as const },
-  { title: 'WG-Zimmer Kreuzberg', date: '18.03.2025', status: 'gesehen' as const },
-  { title: 'Altbauwohnung am Main', date: '20.03.2025', status: 'offen' as const },
 ];
 
 const myListings = [
@@ -28,22 +35,35 @@ const myListings = [
   { id: '99', title: 'Gartenhaus Nymphenburg', meta: 'München · 4 Zi · 130m²', price: '€ 2.400 / Monat', status: 'inaktiv' as const, anfragen: 0, img: IMG('photo-1484154218962-a197022b5858') },
 ];
 
-const newAnfragen = [
-  { initials: 'LM', name: 'Lena Müller', sub: 'Anfrage für: Helle 3-Zimmer in Schwabing', date: 'Heute, 14:23' },
-  { initials: 'TK', name: 'Thomas Klein', sub: 'Anfrage für: Kompaktes Studio Maxvorstadt', date: 'Heute, 11:05' },
-  { initials: 'AS', name: 'Anna Schmidt', sub: 'Anfrage für: Helle 3-Zimmer in Schwabing', date: 'Gestern, 18:42' },
-];
-
-const requestStatusStyle: Record<'offen' | 'gesehen' | 'beantwortet', string> = {
+const requestStatusStyle: Record<AnfrageStatus, string> = {
   offen: 'bg-status-yellow-bg text-status-yellow-fg',
   gesehen: 'bg-status-blue-bg text-status-blue-fg',
   beantwortet: 'bg-status-green-bg text-status-green-fg',
 };
-const requestStatusLabel: Record<'offen' | 'gesehen' | 'beantwortet', string> = {
+const requestStatusLabel: Record<AnfrageStatus, string> = {
   offen: 'Offen',
   gesehen: 'Gesehen',
   beantwortet: 'Beantwortet',
 };
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+const formatRelative = (iso: string) => {
+  const d = new Date(iso);
+  const today = new Date();
+  const isToday = d.toDateString() === today.toDateString();
+  const yest = new Date(today);
+  yest.setDate(today.getDate() - 1);
+  const isYest = d.toDateString() === yest.toDateString();
+  const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  if (isToday) return `Heute, ${time}`;
+  if (isYest) return `Gestern, ${time}`;
+  return formatDate(iso);
+};
+
+const initialsOf = (vn: string, nn: string) =>
+  ((vn?.[0] ?? '') + (nn?.[0] ?? '')).toUpperCase() || '··';
 
 const StatCard = ({ label, value, sub, accent, delay, icon: Icon }: { label: string; value: string; sub?: string; accent?: boolean; delay: number; icon: LucideIcon }) => (
   <div
@@ -63,15 +83,41 @@ const StatCard = ({ label, value, sub, accent, delay, icon: Icon }: { label: str
 );
 
 const Dashboard = () => {
-  const { user, signIn } = useAuthContext();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('suchen');
   const [animKey, setAnimKey] = useState(0);
+  const [sentAnfragen, setSentAnfragen] = useState<AnfrageRow[]>([]);
+  const [receivedAnfragen, setReceivedAnfragen] = useState<AnfrageRow[]>([]);
+  const [openCount, setOpenCount] = useState(0);
 
-  // Demo: auto-sign-in as Max for preview
   useEffect(() => {
-    if (!user) signIn(mockUsers[0].email, 'demo');
-  }, [user, signIn]);
+    if (!user) return;
+    (async () => {
+      const [sentRes, recRes, openRes] = await Promise.all([
+        supabase
+          .from('anfragen')
+          .select('id, status, created_at, vorname, nachname, inserat_id, sender_id, empfaenger_id, inserat:inserate(titel)')
+          .eq('sender_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        supabase
+          .from('anfragen')
+          .select('id, status, created_at, vorname, nachname, inserat_id, sender_id, empfaenger_id, inserat:inserate(titel)')
+          .eq('empfaenger_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        supabase
+          .from('anfragen')
+          .select('id', { count: 'exact', head: true })
+          .eq('empfaenger_id', user.id)
+          .eq('status', 'offen'),
+      ]);
+      setSentAnfragen((sentRes.data ?? []) as AnfrageRow[]);
+      setReceivedAnfragen((recRes.data ?? []) as AnfrageRow[]);
+      setOpenCount(openRes.count ?? 0);
+    })();
+  }, [user]);
 
   const handleMode = (m: Mode) => {
     if (m === mode) return;
@@ -79,13 +125,12 @@ const Dashboard = () => {
     setAnimKey(k => k + 1);
   };
 
-  const firstName = user?.vorname ?? 'Max';
+  const firstName = user?.vorname ?? 'Gast';
 
   return (
     <div className="min-h-screen bg-neutral">
       <Navbar />
 
-      {/* Dashboard header */}
       <div>
         <div className="mx-auto flex max-w-[1200px] flex-col gap-5 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-12">
           <div>
@@ -114,13 +159,19 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Main */}
       <main className="mx-auto max-w-[1200px] px-4 py-10 md:px-12">
         <div key={animKey} className="animate-fade-in">
           {mode === 'suchen' ? (
-            <SuchenView navigate={navigate} />
+            <SuchenView
+              navigate={navigate}
+              sentAnfragen={sentAnfragen}
+            />
           ) : (
-            <AnbietenView navigate={navigate} />
+            <AnbietenView
+              navigate={navigate}
+              receivedAnfragen={receivedAnfragen}
+              openCount={openCount}
+            />
           )}
         </div>
       </main>
@@ -129,16 +180,26 @@ const Dashboard = () => {
 };
 
 /* ───────────────── SUCHEN ───────────────── */
-const SuchenView = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
+const SuchenView = ({
+  navigate,
+  sentAnfragen,
+}: {
+  navigate: ReturnType<typeof useNavigate>;
+  sentAnfragen: AnfrageRow[];
+}) => (
   <>
-    {/* Stats */}
     <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
       <StatCard label="Gespeicherte Inserate" value="12" delay={0} icon={Bookmark} />
-      <StatCard label="Gesendete Anfragen" value="5" sub="2 noch offen" delay={80} icon={Send} />
+      <StatCard
+        label="Gesendete Anfragen"
+        value={String(sentAnfragen.length)}
+        sub={`${sentAnfragen.filter(a => a.status === 'offen').length} noch offen`}
+        delay={80}
+        icon={Send}
+      />
       <StatCard label="Neue Inserate heute" value="24" sub="in deiner Umgebung" delay={160} icon={Sparkles} />
     </div>
 
-    {/* Letzte Suchen */}
     <h2 className="mb-4 text-[18px] font-bold text-foreground">Deine letzten Suchen</h2>
     <div className="mb-8 flex flex-wrap gap-2">
       {['München · Mieten · bis 1.500€', 'Berlin · WG-Zimmer', 'Hamburg · Kaufen'].map(p => (
@@ -153,7 +214,6 @@ const SuchenView = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) 
       ))}
     </div>
 
-    {/* Gespeicherte Inserate */}
     <div className="mb-4 flex items-center justify-between">
       <h2 className="text-[18px] font-bold text-foreground">Gespeicherte Inserate</h2>
       <Link to="/inserate" className="text-[13px] text-foreground-secondary transition-colors hover:text-foreground">
@@ -180,38 +240,57 @@ const SuchenView = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) 
       ))}
     </div>
 
-    {/* Meine Anfragen */}
     <h2 className="mb-4 mt-8 text-[18px] font-bold text-foreground">Meine Anfragen</h2>
-    <div className="space-y-2">
-      {myRequests.map((r, i) => (
-        <div
-          key={i}
-          className="flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-background"
-        >
-          <div>
-            <p className="text-sm font-semibold text-foreground">{r.title}</p>
-            <p className="mt-1 text-[12px] text-foreground-tertiary">Gesendet am {r.date}</p>
-          </div>
-          <span className={cn('rounded-pill px-3 py-1 text-[11px] font-semibold', requestStatusStyle[r.status])}>
-            {requestStatusLabel[r.status]}
-          </span>
-        </div>
-      ))}
-    </div>
+    {sentAnfragen.length === 0 ? (
+      <div className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-sm text-foreground-tertiary">
+        Du hast noch keine Anfragen gesendet.
+      </div>
+    ) : (
+      <div className="space-y-2">
+        {sentAnfragen.map(r => (
+          <button
+            key={r.id}
+            onClick={() => navigate('/anfragen')}
+            className="flex w-full items-center justify-between rounded-xl border border-border bg-surface px-5 py-4 text-left transition-colors hover:bg-background"
+          >
+            <div>
+              <p className="text-sm font-semibold text-foreground">{r.inserat?.titel ?? 'Inserat entfernt'}</p>
+              <p className="mt-1 text-[12px] text-foreground-tertiary">Gesendet am {formatDate(r.created_at)}</p>
+            </div>
+            <span className={cn('rounded-pill px-3 py-1 text-[11px] font-semibold', requestStatusStyle[r.status])}>
+              {requestStatusLabel[r.status]}
+            </span>
+          </button>
+        ))}
+      </div>
+    )}
   </>
 );
 
 /* ───────────────── ANBIETEN ───────────────── */
-const AnbietenView = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
+const AnbietenView = ({
+  navigate,
+  receivedAnfragen,
+  openCount,
+}: {
+  navigate: ReturnType<typeof useNavigate>;
+  receivedAnfragen: AnfrageRow[];
+  openCount: number;
+}) => (
   <>
-    {/* Stats */}
     <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
       <StatCard label="Aktive Inserate" value="3" delay={0} icon={Building2} />
-      <StatCard label="Neue Anfragen" value="8" sub="seit letzter Woche" accent delay={80} icon={Inbox} />
+      <StatCard
+        label="Neue Anfragen"
+        value={String(openCount)}
+        sub={openCount === 1 ? 'noch offen' : 'noch offen'}
+        accent
+        delay={80}
+        icon={Inbox}
+      />
       <StatCard label="Inserate Aufrufe" value="142" sub="diese Woche" delay={160} icon={Eye} />
     </div>
 
-    {/* Meine Inserate */}
     <div className="mb-4 flex items-center justify-between">
       <h2 className="text-[18px] font-bold text-foreground">Meine Inserate</h2>
       <button
@@ -265,30 +344,40 @@ const AnbietenView = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }
       ))}
     </div>
 
-    {/* Neue Anfragen */}
     <h2 className="mb-4 mt-8 text-[18px] font-bold text-foreground">Neue Anfragen</h2>
-    <div className="space-y-2">
-      {newAnfragen.map((a, i) => (
-        <div
-          key={i}
-          className="flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-background"
-        >
-          <div>
-            <p className="text-sm font-semibold text-foreground">{a.name}</p>
-            <p className="mt-0.5 text-[12px] text-foreground-secondary">{a.sub}</p>
+    {receivedAnfragen.length === 0 ? (
+      <div className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-sm text-foreground-tertiary">
+        Noch keine Anfragen erhalten.
+      </div>
+    ) : (
+      <div className="space-y-2">
+        {receivedAnfragen.map(a => (
+          <div
+            key={a.id}
+            className="flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-background"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-neutral text-[12px] font-semibold text-foreground-secondary">
+                {initialsOf(a.vorname, a.nachname)}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">{a.vorname} {a.nachname}</p>
+                <p className="mt-0.5 text-[12px] text-foreground-secondary">Anfrage für: {a.inserat?.titel ?? 'Inserat entfernt'}</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-1.5">
+              <span className="text-[11px] text-foreground-tertiary">{formatRelative(a.created_at)}</span>
+              <button
+                onClick={() => navigate('/anfragen')}
+                className="rounded-pill border border-border bg-transparent px-3.5 py-1 text-[12px] text-foreground-secondary transition-colors hover:border-foreground"
+              >
+                Details ansehen
+              </button>
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <span className="text-[11px] text-foreground-tertiary">{a.date}</span>
-            <button
-              onClick={() => navigate('/anfragen')}
-              className="rounded-pill border border-border bg-transparent px-3.5 py-1 text-[12px] text-foreground-secondary transition-colors hover:border-foreground"
-            >
-              Details ansehen
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    )}
   </>
 );
 

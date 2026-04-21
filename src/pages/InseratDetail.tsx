@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { MapPin, CheckCircle2, ChevronLeft, X, Check, Images, Calendar, Square, DoorOpen, Building2, Sparkles } from 'lucide-react';
+import { MapPin, CheckCircle2, ChevronLeft, Images, Calendar, Square, DoorOpen, Building2, Sparkles } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
+import { AnfrageModal } from '@/components/shared/anfrage-modal';
 import { mockInserate } from '@/lib/mock-data';
 import { KATEGORIE_LABELS } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -364,116 +365,13 @@ const InseratDetail = () => {
 
       <Footer />
 
-      {modalOpen && (
-        <AnfrageModal
-          titel={inserat.titel}
-          ownerName={ownerName}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+      <AnfrageModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        inserat={inserat}
+      />
     </div>
   );
 };
-
-/* ============================================================
-   AnfrageModal
-   ============================================================ */
-function AnfrageModal({ titel, ownerName, onClose }: { titel: string; ownerName: string; onClose: () => void }) {
-  const [sent, setSent] = useState(false);
-  const [form, setForm] = useState({
-    vorname: '', nachname: '', email: '', telefon: '', einzug_ab: '', nachricht: '',
-  });
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSent(true);
-  };
-
-  const inputClass = 'w-full rounded-[10px] border-[1.5px] border-transparent bg-muted px-[18px] py-3.5 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground focus:border-foreground focus:bg-background focus:outline-none';
-  const labelClass = 'mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground';
-
-  return (
-    <>
-      <div className="fixed inset-0 z-50 animate-fade-in bg-black/50" onClick={onClose} />
-      <div
-        role="dialog"
-        aria-modal="true"
-        className="fixed left-1/2 top-1/2 z-[51] w-[calc(100vw-32px)] max-w-[520px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl bg-card p-8 shadow-card"
-        style={{ maxHeight: '90vh' }}
-      >
-        <button
-          onClick={onClose}
-          aria-label="Schließen"
-          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-border"
-        >
-          <X className="h-4 w-4" />
-        </button>
-
-        {sent ? (
-          <div className="flex flex-col items-center py-6 text-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#1A6B3C]/10">
-              <Check className="h-7 w-7 text-[#1A6B3C]" />
-            </div>
-            <h3 className="text-[20px] font-bold text-foreground">Anfrage gesendet!</h3>
-            <p className="mt-1.5 text-[14px] text-muted-foreground">{ownerName} wurde benachrichtigt.</p>
-            <button
-              onClick={onClose}
-              className="mt-6 rounded-full bg-muted px-6 py-3 text-[14px] font-semibold text-foreground transition-colors hover:bg-border"
-            >
-              Schließen
-            </button>
-          </div>
-        ) : (
-          <>
-            <h2 className="text-[22px] font-bold text-foreground">Anfrage senden</h2>
-            <p className="mb-7 mt-1.5 text-[14px] text-muted-foreground">{titel}</p>
-
-            <form onSubmit={submit} className="space-y-5">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={labelClass}>Vorname</label>
-                  <input required className={inputClass} value={form.vorname} onChange={e => setForm({ ...form, vorname: e.target.value })} />
-                </div>
-                <div>
-                  <label className={labelClass}>Nachname</label>
-                  <input required className={inputClass} value={form.nachname} onChange={e => setForm({ ...form, nachname: e.target.value })} />
-                </div>
-              </div>
-              <div>
-                <label className={labelClass}>E-Mail</label>
-                <input required type="email" className={inputClass} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-              </div>
-              <div>
-                <label className={labelClass}>Telefon (optional)</label>
-                <input type="tel" className={inputClass} value={form.telefon} onChange={e => setForm({ ...form, telefon: e.target.value })} />
-              </div>
-              <div>
-                <label className={labelClass}>Einzug ab (optional)</label>
-                <input type="date" className={inputClass} value={form.einzug_ab} onChange={e => setForm({ ...form, einzug_ab: e.target.value })} />
-              </div>
-              <div>
-                <label className={labelClass}>Nachricht</label>
-                <textarea
-                  required
-                  className={cn(inputClass, 'min-h-[120px] resize-y')}
-                  placeholder="Hallo, ich interessiere mich für Ihre Wohnung und würde gerne mehr erfahren..."
-                  value={form.nachricht}
-                  onChange={e => setForm({ ...form, nachricht: e.target.value })}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="mt-6 w-full rounded-full bg-foreground px-4 py-4 text-[15px] font-semibold text-background transition-colors hover:bg-foreground/90"
-              >
-                Anfrage senden
-              </button>
-            </form>
-          </>
-        )}
-      </div>
-    </>
-  );
-}
 
 export default InseratDetail;
