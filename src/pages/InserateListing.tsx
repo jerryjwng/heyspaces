@@ -120,7 +120,27 @@ const InserateListing = () => {
 
       {/* Grid or empty */}
       <div className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-20 md:px-12">
-        {visible.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="overflow-hidden rounded-[28px] bg-surface p-3 shadow-card">
+                <div className="flex items-start gap-3 px-2 pt-2">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2 px-2">
+                  <Skeleton className="h-7 w-16 rounded-full" />
+                  <Skeleton className="h-7 w-20 rounded-full" />
+                  <Skeleton className="h-7 w-24 rounded-full" />
+                </div>
+                <Skeleton className="mt-4 aspect-[4/3] w-full rounded-[20px]" />
+              </div>
+            ))}
+          </div>
+        ) : visible.length === 0 ? (
           <div className="flex flex-col items-center py-20 text-center">
             <Search className="h-12 w-12 text-border-strong" strokeWidth={1.5} />
             <h2 className="mt-6 text-xl font-semibold text-foreground">Keine Inserate gefunden</h2>
