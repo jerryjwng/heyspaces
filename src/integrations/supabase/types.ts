@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      anfragen: {
+        Row: {
+          antwort: string | null
+          created_at: string
+          einzug_ab: string | null
+          email: string
+          empfaenger_id: string
+          id: string
+          inserat_id: string
+          nachname: string
+          nachricht: string
+          sender_id: string
+          status: string
+          telefon: string | null
+          updated_at: string
+          vorname: string
+        }
+        Insert: {
+          antwort?: string | null
+          created_at?: string
+          einzug_ab?: string | null
+          email: string
+          empfaenger_id: string
+          id?: string
+          inserat_id: string
+          nachname: string
+          nachricht: string
+          sender_id: string
+          status?: string
+          telefon?: string | null
+          updated_at?: string
+          vorname: string
+        }
+        Update: {
+          antwort?: string | null
+          created_at?: string
+          einzug_ab?: string | null
+          email?: string
+          empfaenger_id?: string
+          id?: string
+          inserat_id?: string
+          nachname?: string
+          nachricht?: string
+          sender_id?: string
+          status?: string
+          telefon?: string | null
+          updated_at?: string
+          vorname?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anfragen_empfaenger_id_fkey"
+            columns: ["empfaenger_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anfragen_inserat_id_fkey"
+            columns: ["inserat_id"]
+            isOneToOne: false
+            referencedRelation: "inserate"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anfragen_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favoriten: {
+        Row: {
+          created_at: string
+          id: string
+          inserat_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inserat_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inserat_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favoriten_inserat_id_fkey"
+            columns: ["inserat_id"]
+            isOneToOne: false
+            referencedRelation: "inserate"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favoriten_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inserate: {
         Row: {
           angebotstyp: string
