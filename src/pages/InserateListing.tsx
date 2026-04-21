@@ -5,8 +5,11 @@ import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { InseratCard } from '@/components/inserate/inserat-card';
 import { AirbnbSearch, AirbnbSearchValues, KatFilter } from '@/components/shared/airbnb-search';
-import { mockInserate } from '@/lib/mock-data';
 import { useFavoriten } from '@/hooks/use-favoriten';
+import { supabase } from '@/integrations/supabase/client';
+import { mapInserat } from '@/lib/inserat-mapper';
+import type { Inserat } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type SortBy = 'newest' | 'price_asc' | 'price_desc' | 'size_asc';
 
