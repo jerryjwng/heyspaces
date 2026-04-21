@@ -29,6 +29,9 @@ const InserateListing = () => {
   const { favorites, toggle: toggleFavorite } = useFavoriten();
   const [showAll, setShowAll] = useState(false);
 
+  const [inserate, setInserate] = useState<Inserat[]>([]);
+  const [loading, setLoading] = useState(true);
+
   // Sync URL whenever values change
   useEffect(() => {
     const p = new URLSearchParams();
@@ -39,8 +42,24 @@ const InserateListing = () => {
     setSearchParams(p, { replace: true });
   }, [values, setSearchParams]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    supabase
+      .from('inserate')
+      .select('*')
+      .eq('status', 'aktiv')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setInserate((data ?? []).map(r => mapInserat(r)));
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   const filtered = useMemo(() => {
-    let result = mockInserate.filter(i => {
+    let result = inserate.filter(i => {
       if (values.ort && !i.stadt.toLowerCase().includes(values.ort.toLowerCase())) return false;
       if (values.kategorie !== 'alle' && i.kategorie !== values.kategorie) return false;
       if (values.maxPreis && i.preis > Number(values.maxPreis)) return false;
@@ -54,7 +73,7 @@ const InserateListing = () => {
       default: result = [...result].sort((a, b) => b.created_at.localeCompare(a.created_at));
     }
     return result;
-  }, [values, sortBy]);
+  }, [inserate, values, sortBy]);
 
   const visible = showAll ? filtered : filtered.slice(0, PAGE_SIZE);
   const remaining = filtered.length - visible.length;
