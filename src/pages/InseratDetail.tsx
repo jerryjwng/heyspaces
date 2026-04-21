@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { MapPin, CheckCircle2, ChevronLeft, X, Check, Images, Calendar, Square, DoorOpen, Building2, Sparkles } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
+import { AnfrageModal } from '@/components/shared/anfrage-modal';
 import { mockInserate } from '@/lib/mock-data';
 import { KATEGORIE_LABELS } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -364,13 +365,11 @@ const InseratDetail = () => {
 
       <Footer />
 
-      {modalOpen && (
-        <AnfrageModal
-          titel={inserat.titel}
-          ownerName={ownerName}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+      <AnfrageModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        inserat={inserat}
+      />
     </div>
   );
 };
