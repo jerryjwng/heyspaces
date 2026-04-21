@@ -442,6 +442,7 @@ const AnbietenView = ({
       </div>
     )}
   </>
-);
+  );
+};
 
 export default Dashboard;
