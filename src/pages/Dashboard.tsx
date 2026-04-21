@@ -23,16 +23,23 @@ type AnfrageRow = {
   inserat?: { titel: string } | null;
 };
 
+type MyListing = {
+  id: string;
+  titel: string;
+  stadt: string;
+  zimmer: number;
+  flaeche: number;
+  preis: number;
+  kategorie: string;
+  status: string;
+  bilder: string[];
+  anfragen: number;
+};
+
 const savedListings = [
   { id: '1', price: '€ 1.750 / Monat', title: 'Helle 3-Zimmer in Schwabing', meta: 'München · 78 m² · 3 Zi.', img: IMG('photo-1502672260266-1c1ef2d93688') },
   { id: '2', price: '€ 580 / Monat', title: 'WG-Zimmer Kreuzberg', meta: 'Berlin · 18 m² · 1 Zi.', img: IMG('photo-1545324418-cc1a3fa10c00') },
   { id: '4', price: '€ 1.680 / Monat', title: 'Altbauwohnung am Main', meta: 'Frankfurt · 110 m² · 4 Zi.', img: IMG('photo-1522708323590-d24dbb6b0267') },
-];
-
-const myListings = [
-  { id: '1', title: 'Helle 3-Zimmer in Schwabing', meta: 'München · 3 Zi · 78m²', price: '€ 1.750 / Monat', status: 'aktiv' as const, anfragen: 3, img: IMG('photo-1502672260266-1c1ef2d93688') },
-  { id: '7', title: 'Kompaktes Studio Maxvorstadt', meta: 'München · 1 Zi · 32m²', price: '€ 890 / Monat', status: 'aktiv' as const, anfragen: 5, img: IMG('photo-1560448204-e02f11c3d0e2') },
-  { id: '99', title: 'Gartenhaus Nymphenburg', meta: 'München · 4 Zi · 130m²', price: '€ 2.400 / Monat', status: 'inaktiv' as const, anfragen: 0, img: IMG('photo-1484154218962-a197022b5858') },
 ];
 
 const requestStatusStyle: Record<AnfrageStatus, string> = {
