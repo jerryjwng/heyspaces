@@ -6,6 +6,7 @@ import { Footer } from '@/components/shared/footer';
 import { InseratCard } from '@/components/inserate/inserat-card';
 import { AirbnbSearch, AirbnbSearchValues, KatFilter } from '@/components/shared/airbnb-search';
 import { mockInserate } from '@/lib/mock-data';
+import { useFavoriten } from '@/hooks/use-favoriten';
 
 type SortBy = 'newest' | 'price_asc' | 'price_desc' | 'size_asc';
 
@@ -22,7 +23,7 @@ const InserateListing = () => {
   });
 
   const [sortBy, setSortBy] = useState<SortBy>('newest');
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const { favorites, toggle: toggleFavorite } = useFavoriten();
   const [showAll, setShowAll] = useState(false);
 
   // Sync URL whenever values change
@@ -59,9 +60,8 @@ const InserateListing = () => {
     setValues({ ort: '', kategorie: 'alle', maxPreis: '', zimmer: 0 });
   };
 
-  const toggleFavorite = (id: string) => {
-    setFavorites(f => f.includes(id) ? f.filter(x => x !== id) : [...f, id]);
-  };
+
+
 
   return (
     <div className="flex min-h-screen flex-col bg-sand">
