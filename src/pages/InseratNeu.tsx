@@ -573,7 +573,7 @@ export default function InseratNeu() {
               <Upload className="mx-auto h-10 w-10 text-[#A8A8A8]" />
               <p className="mt-3 text-[16px] font-semibold text-[#0C0C0C]">Fotos hier ablegen</p>
               <p className="mt-1 text-[14px] text-[#6B6B6B]">oder klicken zum Auswählen</p>
-              <p className="mt-3 text-[12px] text-[#A8A8A8]">Bis zu 10 Fotos · JPG, PNG</p>
+              <p className="mt-3 text-[12px] text-[#A8A8A8]">Bis zu 10 Fotos · JPG, PNG, WebP · max. 10MB</p>
               <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handlePhotos} className="hidden" />
             </div>
 
