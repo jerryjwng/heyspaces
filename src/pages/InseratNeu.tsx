@@ -574,7 +574,7 @@ export default function InseratNeu() {
               <p className="mt-3 text-[16px] font-semibold text-[#0C0C0C]">Fotos hier ablegen</p>
               <p className="mt-1 text-[14px] text-[#6B6B6B]">oder klicken zum Auswählen</p>
               <p className="mt-3 text-[12px] text-[#A8A8A8]">Bis zu 10 Fotos · JPG, PNG</p>
-              <input ref={photoRef} type="file" accept="image/*" multiple onChange={handlePhotos} className="hidden" />
+              <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handlePhotos} className="hidden" />
             </div>
 
             {photos.length > 0 && (
