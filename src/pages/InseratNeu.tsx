@@ -579,17 +579,58 @@ export default function InseratNeu() {
 
             {photos.length > 0 && (
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {photos.map((p, i) => (
-                  <div key={i} className="group relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#F5F5F3]">
-                    <img src={p.url} alt="" className="h-full w-full object-cover" />
-                    {i === 0 && (
-                      <span className="absolute left-2 top-2 rounded-full bg-[#0C0C0C] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">Titelbild</span>
-                    )}
-                    <button onClick={() => setPhotos(photos.filter((_, j) => j !== i))} className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#0C0C0C] transition-colors hover:bg-white">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+                {photos.map((p, i) => {
+                  const uploading = p.status === 'uploading';
+                  const failed = p.status === 'error';
+                  return (
+                    <div
+                      key={p.id}
+                      className={cn(
+                        'group relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#F5F5F3] transition-all',
+                        failed && 'ring-2 ring-[#C8341F]'
+                      )}
+                    >
+                      <img
+                        src={p.url}
+                        alt=""
+                        className={cn(
+                          'h-full w-full object-cover transition-opacity duration-300',
+                          uploading && 'opacity-40',
+                          failed && 'opacity-30'
+                        )}
+                      />
+                      {uploading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow">
+                            <Loader2 className="h-4 w-4 animate-spin text-[#0C0C0C]" />
+                          </div>
+                        </div>
+                      )}
+                      {failed && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-3 text-center">
+                          <AlertCircle className="h-5 w-5 text-[#C8341F]" />
+                          <p className="text-[11px] font-semibold text-[#C8341F]">Upload fehlgeschlagen</p>
+                          <button
+                            onClick={() => retryPhoto(p)}
+                            className="inline-flex items-center gap-1 rounded-full bg-[#0C0C0C] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#2A2A2A]"
+                          >
+                            <RotateCw className="h-3 w-3" />
+                            Erneut
+                          </button>
+                        </div>
+                      )}
+                      {i === 0 && !uploading && !failed && (
+                        <span className="absolute left-2 top-2 rounded-full bg-[#0C0C0C] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">Titelbild</span>
+                      )}
+                      <button
+                        onClick={() => removePhoto(p)}
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#0C0C0C] transition-colors hover:bg-white"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
