@@ -218,8 +218,39 @@ export default function InseratNeu() {
   const [hausnr, setHausnr] = useState('');
   const [plz, setPlz] = useState('');
   const [stadt, setStadt] = useState('');
-  const [photos, setPhotos] = useState<{ url: string; file?: File }[]>([]);
+  type PhotoStatus = 'existing' | 'uploading' | 'done' | 'error';
+  type Photo = {
+    id: string;
+    url: string;          // preview blob URL while uploading, public URL when done/existing
+    file?: File;
+    path?: string;        // storage path once uploaded
+    status: PhotoStatus;
+  };
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const photoRef = useRef<HTMLInputElement>(null);
+
+  const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+  const MAX_SIZE = 10 * 1024 * 1024;
+  const BUCKET = 'inserate-bilder';
+
+  const uploadPhoto = async (photo: Photo) => {
+    if (!user || !photo.file) return;
+    const ext = photo.file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, status: 'uploading' } : p));
+    const { error } = await supabase.storage.from(BUCKET).upload(path, photo.file, {
+      contentType: photo.file.type,
+      upsert: false,
+    });
+    if (error) {
+      setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, status: 'error' } : p));
+      return;
+    }
+    const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    setPhotos(prev => prev.map(p => p.id === photo.id
+      ? { ...p, status: 'done', path, url: pub.publicUrl }
+      : p));
+  };
 
   // Load existing inserat in edit mode
   useEffect(() => {
@@ -254,22 +285,63 @@ export default function InseratNeu() {
       setHausnr(data.hausnummer ?? '');
       setPlz(data.plz ?? '');
       setStadt(data.stadt ?? '');
-      setPhotos((data.bilder ?? []).map((url: string) => ({ url })));
+      setPhotos((data.bilder ?? []).map((url: string, i: number) => ({
+        id: `existing-${i}-${Math.random().toString(36).slice(2, 8)}`,
+        url,
+        status: 'existing' as PhotoStatus,
+        path: extractStoragePath(url),
+      })));
       setLoadingExisting(false);
     })();
     return () => { cancelled = true; };
   }, [isEdit, editId, user, navigate]);
 
+  function extractStoragePath(publicUrl: string): string | undefined {
+    const marker = `/object/public/${BUCKET}/`;
+    const idx = publicUrl.indexOf(marker);
+    return idx >= 0 ? publicUrl.slice(idx + marker.length) : undefined;
+  }
+
   const canStep1 = kategorie && titel.trim() && preis.trim();
   const canStep2 = flaeche && zimmer && verfuegbar && stadt.trim();
 
   const handlePhotos = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const newOnes = Array.from(e.target.files).slice(0, 10 - photos.length).map(f => ({
-      url: URL.createObjectURL(f),
-      file: f,
-    }));
-    setPhotos(prev => [...prev, ...newOnes].slice(0, 10));
+    if (!e.target.files || !user) return;
+    const incoming = Array.from(e.target.files);
+    e.target.value = '';
+    const remaining = 10 - photos.length;
+    const accepted: Photo[] = [];
+    for (const f of incoming.slice(0, remaining)) {
+      if (!ALLOWED.includes(f.type)) {
+        toast.error('Nur JPG, PNG und WebP werden unterstützt.');
+        continue;
+      }
+      if (f.size > MAX_SIZE) {
+        toast.error('Foto ist zu groß. Maximal 10MB pro Bild.');
+        continue;
+      }
+      accepted.push({
+        id: `new-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        url: URL.createObjectURL(f),
+        file: f,
+        status: 'uploading',
+      });
+    }
+    if (accepted.length === 0) return;
+    setPhotos(prev => [...prev, ...accepted].slice(0, 10));
+    accepted.forEach(p => { void uploadPhoto(p); });
+  };
+
+  const removePhoto = async (photo: Photo) => {
+    setPhotos(prev => prev.filter(p => p.id !== photo.id));
+    if (photo.path && (photo.status === 'done' || photo.status === 'existing')) {
+      await supabase.storage.from(BUCKET).remove([photo.path]);
+    }
+  };
+
+  const retryPhoto = (photo: Photo) => {
+    if (!photo.file) return;
+    void uploadPhoto({ ...photo, status: 'uploading' });
   };
 
   const submit = async () => {
