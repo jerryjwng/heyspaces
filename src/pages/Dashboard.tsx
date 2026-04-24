@@ -233,6 +233,7 @@ const Dashboard = () => {
             <SuchenView
               navigate={navigate}
               sentAnfragen={sentAnfragen}
+              loading={loading}
             />
           ) : (
             <AnbietenView
@@ -240,6 +241,8 @@ const Dashboard = () => {
               receivedAnfragen={receivedAnfragen}
               openCount={openCount}
               myListings={myListings}
+              loading={loading}
+              onToggleStatus={toggleListingStatus}
             />
           )}
         </div>
