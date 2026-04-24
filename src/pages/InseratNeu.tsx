@@ -2,7 +2,7 @@ import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Home, Users, Key, Sparkles, X, Upload, FileText, CheckCircle2,
-  Minus, Plus, Loader2, Image as ImageIcon, Check,
+  Minus, Plus, Loader2, Image as ImageIcon, Check, RotateCw, AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Navbar } from '@/components/shared/navbar';
