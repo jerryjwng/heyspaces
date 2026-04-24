@@ -425,12 +425,16 @@ const AnbietenView = ({
       </button>
     </div>
 
-    {myListings.length === 0 ? (
+    {loading ? (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => <ListingRowSkeleton key={i} />)}
+      </div>
+    ) : myListings.length === 0 ? (
       <div className="rounded-xl border border-border bg-surface px-5 py-10 text-center text-sm text-foreground-tertiary">
         Du hast noch keine Inserate. Erstelle dein erstes Inserat.
       </div>
     ) : (
-      <div className="space-y-2">
+      <div className="space-y-2 animate-fade-in">
         {myListings.map(l => (
           <div
             key={l.id}
@@ -452,15 +456,24 @@ const AnbietenView = ({
               <p className="mt-1 text-[13px] text-foreground-secondary">{formatPrice(l)}</p>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <span
+              <button
+                onClick={() => onToggleStatus(l.id, l.status)}
+                title="Klicken zum Umschalten"
                 className={cn(
-                  'rounded-pill px-3 py-1 text-[11px] font-semibold',
+                  'rounded-pill px-3 py-1 text-[11px] font-semibold transition-all hover:opacity-80 active:scale-95',
                   l.status === 'aktiv' ? 'bg-status-green-bg text-status-green-fg' : 'bg-neutral text-foreground-secondary'
                 )}
               >
                 {l.status === 'aktiv' ? 'Aktiv' : l.status === 'reserviert' ? 'Reserviert' : l.status === 'vergeben' ? 'Vergeben' : 'Inaktiv'}
-              </span>
+              </button>
               <div className="flex gap-2">
+                <button
+                  onClick={() => navigate(`/inserate/${l.id}/bearbeiten`)}
+                  className="inline-flex items-center gap-1 rounded-pill border border-border bg-transparent px-3.5 py-1 text-[12px] text-foreground-secondary transition-colors hover:border-foreground"
+                >
+                  <Pencil className="h-3 w-3" />
+                  Bearbeiten
+                </button>
                 <button
                   onClick={() => navigate(`/inserate/${l.id}`)}
                   className="rounded-pill border border-border bg-transparent px-3.5 py-1 text-[12px] text-foreground-secondary transition-colors hover:border-foreground"
@@ -482,12 +495,16 @@ const AnbietenView = ({
       </div>
     )}
     <h2 className="mb-4 mt-8 text-[18px] font-bold text-foreground">Neue Anfragen</h2>
-    {receivedAnfragen.length === 0 ? (
+    {loading ? (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => <AnfrageRowSkeleton key={i} />)}
+      </div>
+    ) : receivedAnfragen.length === 0 ? (
       <div className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-sm text-foreground-tertiary">
         Noch keine Anfragen erhalten.
       </div>
     ) : (
-      <div className="space-y-2">
+      <div className="space-y-2 animate-fade-in">
         {receivedAnfragen.map(a => (
           <div
             key={a.id}
