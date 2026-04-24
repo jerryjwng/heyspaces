@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Heart, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon } from 'lucide-react';
+import { Search, Heart, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon, Pencil } from 'lucide-react';
+import { toast } from 'sonner';
 import { Navbar } from '@/components/shared/navbar';
 import { useAuthContext } from '@/contexts/auth-context';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 const IMG = (id: string, w = 200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop`;
@@ -98,9 +100,12 @@ const Dashboard = () => {
   const [receivedAnfragen, setReceivedAnfragen] = useState<AnfrageRow[]>([]);
   const [openCount, setOpenCount] = useState(0);
   const [myListings, setMyListings] = useState<MyListing[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
+    setLoading(true);
     (async () => {
       const [sentRes, recRes, openRes, listingsRes] = await Promise.all([
         supabase
@@ -126,6 +131,7 @@ const Dashboard = () => {
           .eq('user_id', user.id)
           .order('created_at', { ascending: false }),
       ]);
+      if (cancelled) return;
       setSentAnfragen((sentRes.data ?? []) as AnfrageRow[]);
       setReceivedAnfragen((recRes.data ?? []) as AnfrageRow[]);
       setOpenCount(openRes.count ?? 0);
@@ -144,6 +150,7 @@ const Dashboard = () => {
           return acc;
         }, {});
       }
+      if (cancelled) return;
       setMyListings(
         listings.map(l => ({
           id: l.id,
@@ -158,8 +165,27 @@ const Dashboard = () => {
           anfragen: counts[l.id] ?? 0,
         }))
       );
+      setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, [user]);
+
+  const toggleListingStatus = async (id: string, current: string) => {
+    const next = current === 'aktiv' ? 'inaktiv' : 'aktiv';
+    const prev = myListings;
+    setMyListings(list => list.map(l => l.id === id ? { ...l, status: next } : l));
+    const { error } = await supabase
+      .from('inserate')
+      .update({ status: next })
+      .eq('id', id)
+      .eq('user_id', user!.id);
+    if (error) {
+      setMyListings(prev);
+      toast.error('Status konnte nicht geändert werden.');
+    } else {
+      toast.success('Status aktualisiert');
+    }
+  };
 
   const handleMode = (m: Mode) => {
     if (m === mode) return;
@@ -207,6 +233,7 @@ const Dashboard = () => {
             <SuchenView
               navigate={navigate}
               sentAnfragen={sentAnfragen}
+              loading={loading}
             />
           ) : (
             <AnbietenView
@@ -214,6 +241,8 @@ const Dashboard = () => {
               receivedAnfragen={receivedAnfragen}
               openCount={openCount}
               myListings={myListings}
+              loading={loading}
+              onToggleStatus={toggleListingStatus}
             />
           )}
         </div>
@@ -222,13 +251,40 @@ const Dashboard = () => {
   );
 };
 
+/* ───── Skeleton helpers ───── */
+const ListingRowSkeleton = () => (
+  <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-3">
+    <Skeleton className="h-20 w-28 flex-shrink-0 rounded-xl" />
+    <div className="flex-1 space-y-2">
+      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-3 w-1/3" />
+      <Skeleton className="h-3 w-1/4" />
+    </div>
+    <Skeleton className="h-7 w-16 rounded-pill" />
+  </div>
+);
+const AnfrageRowSkeleton = () => (
+  <div className="flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-4">
+    <div className="flex items-center gap-3">
+      <Skeleton className="h-9 w-9 rounded-full" />
+      <div className="space-y-2">
+        <Skeleton className="h-3.5 w-40" />
+        <Skeleton className="h-3 w-56" />
+      </div>
+    </div>
+    <Skeleton className="h-6 w-20 rounded-pill" />
+  </div>
+);
+
 /* ───────────────── SUCHEN ───────────────── */
 const SuchenView = ({
   navigate,
   sentAnfragen,
+  loading,
 }: {
   navigate: ReturnType<typeof useNavigate>;
   sentAnfragen: AnfrageRow[];
+  loading: boolean;
 }) => (
   <>
     <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -291,12 +347,16 @@ const SuchenView = ({
     </div>
 
     <h2 className="mb-4 mt-8 text-[18px] font-bold text-foreground">Meine Anfragen</h2>
-    {sentAnfragen.length === 0 ? (
+    {loading ? (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => <AnfrageRowSkeleton key={i} />)}
+      </div>
+    ) : sentAnfragen.length === 0 ? (
       <div className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-sm text-foreground-tertiary">
         Du hast noch keine Anfragen gesendet.
       </div>
     ) : (
-      <div className="space-y-2">
+      <div className="space-y-2 animate-fade-in">
         {sentAnfragen.map(r => (
           <button
             key={r.id}
@@ -323,11 +383,15 @@ const AnbietenView = ({
   receivedAnfragen,
   openCount,
   myListings,
+  loading,
+  onToggleStatus,
 }: {
   navigate: ReturnType<typeof useNavigate>;
   receivedAnfragen: AnfrageRow[];
   openCount: number;
   myListings: MyListing[];
+  loading: boolean;
+  onToggleStatus: (id: string, current: string) => void;
 }) => {
   const activeCount = myListings.filter(l => l.status === 'aktiv').length;
   const formatPrice = (l: MyListing) =>
@@ -361,12 +425,16 @@ const AnbietenView = ({
       </button>
     </div>
 
-    {myListings.length === 0 ? (
+    {loading ? (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => <ListingRowSkeleton key={i} />)}
+      </div>
+    ) : myListings.length === 0 ? (
       <div className="rounded-xl border border-border bg-surface px-5 py-10 text-center text-sm text-foreground-tertiary">
         Du hast noch keine Inserate. Erstelle dein erstes Inserat.
       </div>
     ) : (
-      <div className="space-y-2">
+      <div className="space-y-2 animate-fade-in">
         {myListings.map(l => (
           <div
             key={l.id}
@@ -388,15 +456,24 @@ const AnbietenView = ({
               <p className="mt-1 text-[13px] text-foreground-secondary">{formatPrice(l)}</p>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <span
+              <button
+                onClick={() => onToggleStatus(l.id, l.status)}
+                title="Klicken zum Umschalten"
                 className={cn(
-                  'rounded-pill px-3 py-1 text-[11px] font-semibold',
+                  'rounded-pill px-3 py-1 text-[11px] font-semibold transition-all hover:opacity-80 active:scale-95',
                   l.status === 'aktiv' ? 'bg-status-green-bg text-status-green-fg' : 'bg-neutral text-foreground-secondary'
                 )}
               >
                 {l.status === 'aktiv' ? 'Aktiv' : l.status === 'reserviert' ? 'Reserviert' : l.status === 'vergeben' ? 'Vergeben' : 'Inaktiv'}
-              </span>
+              </button>
               <div className="flex gap-2">
+                <button
+                  onClick={() => navigate(`/inserate/${l.id}/bearbeiten`)}
+                  className="inline-flex items-center gap-1 rounded-pill border border-border bg-transparent px-3.5 py-1 text-[12px] text-foreground-secondary transition-colors hover:border-foreground"
+                >
+                  <Pencil className="h-3 w-3" />
+                  Bearbeiten
+                </button>
                 <button
                   onClick={() => navigate(`/inserate/${l.id}`)}
                   className="rounded-pill border border-border bg-transparent px-3.5 py-1 text-[12px] text-foreground-secondary transition-colors hover:border-foreground"
@@ -418,12 +495,16 @@ const AnbietenView = ({
       </div>
     )}
     <h2 className="mb-4 mt-8 text-[18px] font-bold text-foreground">Neue Anfragen</h2>
-    {receivedAnfragen.length === 0 ? (
+    {loading ? (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => <AnfrageRowSkeleton key={i} />)}
+      </div>
+    ) : receivedAnfragen.length === 0 ? (
       <div className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-sm text-foreground-tertiary">
         Noch keine Anfragen erhalten.
       </div>
     ) : (
-      <div className="space-y-2">
+      <div className="space-y-2 animate-fade-in">
         {receivedAnfragen.map(a => (
           <div
             key={a.id}
