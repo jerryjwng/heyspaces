@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Heart, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon } from 'lucide-react';
+import { Search, Heart, Plus, Bookmark, Send, Sparkles, Building2, Inbox, Eye, LucideIcon, Pencil } from 'lucide-react';
+import { toast } from 'sonner';
 import { Navbar } from '@/components/shared/navbar';
 import { useAuthContext } from '@/contexts/auth-context';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 const IMG = (id: string, w = 200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop`;
