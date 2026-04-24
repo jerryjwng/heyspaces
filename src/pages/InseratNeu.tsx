@@ -350,9 +350,22 @@ export default function InseratNeu() {
       navigate('/login');
       return;
     }
+    const hasError = photos.some(p => p.status === 'error');
+    const stillUploading = photos.some(p => p.status === 'uploading');
+    if (hasError) {
+      toast.error('Bitte fehlgeschlagene Fotos entfernen oder erneut hochladen.');
+      return;
+    }
+    if (stillUploading) {
+      toast.error('Fotos werden noch hochgeladen. Bitte kurz warten.');
+      return;
+    }
     setSubmitting(true);
 
     const angebotstyp = preisUnit === 'kauf' ? 'kauf' : 'miete';
+    const bilderUrls = photos
+      .filter(p => p.status === 'done' || p.status === 'existing')
+      .map(p => p.url);
     const payload = {
       user_id: user.id,
       titel: titel.trim(),
@@ -367,7 +380,7 @@ export default function InseratNeu() {
       plz: plz.trim(),
       stadt: stadt.trim(),
       verfuegbar_ab: verfuegbar || null,
-      bilder: photos.filter(p => !p.file).map(p => p.url),
+      bilder: bilderUrls,
       status: 'aktiv',
     };
 
