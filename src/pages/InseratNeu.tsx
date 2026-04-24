@@ -2,7 +2,7 @@ import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Home, Users, Key, Sparkles, X, Upload, FileText, CheckCircle2,
-  Minus, Plus, Loader2, Image as ImageIcon, Check,
+  Minus, Plus, Loader2, Image as ImageIcon, Check, RotateCw, AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Navbar } from '@/components/shared/navbar';
@@ -218,8 +218,39 @@ export default function InseratNeu() {
   const [hausnr, setHausnr] = useState('');
   const [plz, setPlz] = useState('');
   const [stadt, setStadt] = useState('');
-  const [photos, setPhotos] = useState<{ url: string; file?: File }[]>([]);
+  type PhotoStatus = 'existing' | 'uploading' | 'done' | 'error';
+  type Photo = {
+    id: string;
+    url: string;          // preview blob URL while uploading, public URL when done/existing
+    file?: File;
+    path?: string;        // storage path once uploaded
+    status: PhotoStatus;
+  };
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const photoRef = useRef<HTMLInputElement>(null);
+
+  const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+  const MAX_SIZE = 10 * 1024 * 1024;
+  const BUCKET = 'inserate-bilder';
+
+  const uploadPhoto = async (photo: Photo) => {
+    if (!user || !photo.file) return;
+    const ext = photo.file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, status: 'uploading' } : p));
+    const { error } = await supabase.storage.from(BUCKET).upload(path, photo.file, {
+      contentType: photo.file.type,
+      upsert: false,
+    });
+    if (error) {
+      setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, status: 'error' } : p));
+      return;
+    }
+    const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    setPhotos(prev => prev.map(p => p.id === photo.id
+      ? { ...p, status: 'done', path, url: pub.publicUrl }
+      : p));
+  };
 
   // Load existing inserat in edit mode
   useEffect(() => {
@@ -254,22 +285,63 @@ export default function InseratNeu() {
       setHausnr(data.hausnummer ?? '');
       setPlz(data.plz ?? '');
       setStadt(data.stadt ?? '');
-      setPhotos((data.bilder ?? []).map((url: string) => ({ url })));
+      setPhotos((data.bilder ?? []).map((url: string, i: number) => ({
+        id: `existing-${i}-${Math.random().toString(36).slice(2, 8)}`,
+        url,
+        status: 'existing' as PhotoStatus,
+        path: extractStoragePath(url),
+      })));
       setLoadingExisting(false);
     })();
     return () => { cancelled = true; };
   }, [isEdit, editId, user, navigate]);
 
+  function extractStoragePath(publicUrl: string): string | undefined {
+    const marker = `/object/public/${BUCKET}/`;
+    const idx = publicUrl.indexOf(marker);
+    return idx >= 0 ? publicUrl.slice(idx + marker.length) : undefined;
+  }
+
   const canStep1 = kategorie && titel.trim() && preis.trim();
   const canStep2 = flaeche && zimmer && verfuegbar && stadt.trim();
 
   const handlePhotos = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const newOnes = Array.from(e.target.files).slice(0, 10 - photos.length).map(f => ({
-      url: URL.createObjectURL(f),
-      file: f,
-    }));
-    setPhotos(prev => [...prev, ...newOnes].slice(0, 10));
+    if (!e.target.files || !user) return;
+    const incoming = Array.from(e.target.files);
+    e.target.value = '';
+    const remaining = 10 - photos.length;
+    const accepted: Photo[] = [];
+    for (const f of incoming.slice(0, remaining)) {
+      if (!ALLOWED.includes(f.type)) {
+        toast.error('Nur JPG, PNG und WebP werden unterstützt.');
+        continue;
+      }
+      if (f.size > MAX_SIZE) {
+        toast.error('Foto ist zu groß. Maximal 10MB pro Bild.');
+        continue;
+      }
+      accepted.push({
+        id: `new-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        url: URL.createObjectURL(f),
+        file: f,
+        status: 'uploading',
+      });
+    }
+    if (accepted.length === 0) return;
+    setPhotos(prev => [...prev, ...accepted].slice(0, 10));
+    accepted.forEach(p => { void uploadPhoto(p); });
+  };
+
+  const removePhoto = async (photo: Photo) => {
+    setPhotos(prev => prev.filter(p => p.id !== photo.id));
+    if (photo.path && (photo.status === 'done' || photo.status === 'existing')) {
+      await supabase.storage.from(BUCKET).remove([photo.path]);
+    }
+  };
+
+  const retryPhoto = (photo: Photo) => {
+    if (!photo.file) return;
+    void uploadPhoto({ ...photo, status: 'uploading' });
   };
 
   const submit = async () => {
@@ -278,9 +350,22 @@ export default function InseratNeu() {
       navigate('/login');
       return;
     }
+    const hasError = photos.some(p => p.status === 'error');
+    const stillUploading = photos.some(p => p.status === 'uploading');
+    if (hasError) {
+      toast.error('Bitte fehlgeschlagene Fotos entfernen oder erneut hochladen.');
+      return;
+    }
+    if (stillUploading) {
+      toast.error('Fotos werden noch hochgeladen. Bitte kurz warten.');
+      return;
+    }
     setSubmitting(true);
 
     const angebotstyp = preisUnit === 'kauf' ? 'kauf' : 'miete';
+    const bilderUrls = photos
+      .filter(p => p.status === 'done' || p.status === 'existing')
+      .map(p => p.url);
     const payload = {
       user_id: user.id,
       titel: titel.trim(),
@@ -295,7 +380,7 @@ export default function InseratNeu() {
       plz: plz.trim(),
       stadt: stadt.trim(),
       verfuegbar_ab: verfuegbar || null,
-      bilder: photos.filter(p => !p.file).map(p => p.url),
+      bilder: bilderUrls,
       status: 'aktiv',
     };
 
@@ -488,23 +573,64 @@ export default function InseratNeu() {
               <Upload className="mx-auto h-10 w-10 text-[#A8A8A8]" />
               <p className="mt-3 text-[16px] font-semibold text-[#0C0C0C]">Fotos hier ablegen</p>
               <p className="mt-1 text-[14px] text-[#6B6B6B]">oder klicken zum Auswählen</p>
-              <p className="mt-3 text-[12px] text-[#A8A8A8]">Bis zu 10 Fotos · JPG, PNG</p>
-              <input ref={photoRef} type="file" accept="image/*" multiple onChange={handlePhotos} className="hidden" />
+              <p className="mt-3 text-[12px] text-[#A8A8A8]">Bis zu 10 Fotos · JPG, PNG, WebP · max. 10MB</p>
+              <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handlePhotos} className="hidden" />
             </div>
 
             {photos.length > 0 && (
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {photos.map((p, i) => (
-                  <div key={i} className="group relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#F5F5F3]">
-                    <img src={p.url} alt="" className="h-full w-full object-cover" />
-                    {i === 0 && (
-                      <span className="absolute left-2 top-2 rounded-full bg-[#0C0C0C] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">Titelbild</span>
-                    )}
-                    <button onClick={() => setPhotos(photos.filter((_, j) => j !== i))} className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#0C0C0C] transition-colors hover:bg-white">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+                {photos.map((p, i) => {
+                  const uploading = p.status === 'uploading';
+                  const failed = p.status === 'error';
+                  return (
+                    <div
+                      key={p.id}
+                      className={cn(
+                        'group relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#F5F5F3] transition-all',
+                        failed && 'ring-2 ring-[#C8341F]'
+                      )}
+                    >
+                      <img
+                        src={p.url}
+                        alt=""
+                        className={cn(
+                          'h-full w-full object-cover transition-opacity duration-300',
+                          uploading && 'opacity-40',
+                          failed && 'opacity-30'
+                        )}
+                      />
+                      {uploading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow">
+                            <Loader2 className="h-4 w-4 animate-spin text-[#0C0C0C]" />
+                          </div>
+                        </div>
+                      )}
+                      {failed && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-3 text-center">
+                          <AlertCircle className="h-5 w-5 text-[#C8341F]" />
+                          <p className="text-[11px] font-semibold text-[#C8341F]">Upload fehlgeschlagen</p>
+                          <button
+                            onClick={() => retryPhoto(p)}
+                            className="inline-flex items-center gap-1 rounded-full bg-[#0C0C0C] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#2A2A2A]"
+                          >
+                            <RotateCw className="h-3 w-3" />
+                            Erneut
+                          </button>
+                        </div>
+                      )}
+                      {i === 0 && !uploading && !failed && (
+                        <span className="absolute left-2 top-2 rounded-full bg-[#0C0C0C] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">Titelbild</span>
+                      )}
+                      <button
+                        onClick={() => removePhoto(p)}
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#0C0C0C] transition-colors hover:bg-white"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
