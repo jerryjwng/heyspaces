@@ -100,9 +100,12 @@ const Dashboard = () => {
   const [receivedAnfragen, setReceivedAnfragen] = useState<AnfrageRow[]>([]);
   const [openCount, setOpenCount] = useState(0);
   const [myListings, setMyListings] = useState<MyListing[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
+    setLoading(true);
     (async () => {
       const [sentRes, recRes, openRes, listingsRes] = await Promise.all([
         supabase
@@ -128,6 +131,7 @@ const Dashboard = () => {
           .eq('user_id', user.id)
           .order('created_at', { ascending: false }),
       ]);
+      if (cancelled) return;
       setSentAnfragen((sentRes.data ?? []) as AnfrageRow[]);
       setReceivedAnfragen((recRes.data ?? []) as AnfrageRow[]);
       setOpenCount(openRes.count ?? 0);
@@ -146,6 +150,7 @@ const Dashboard = () => {
           return acc;
         }, {});
       }
+      if (cancelled) return;
       setMyListings(
         listings.map(l => ({
           id: l.id,
@@ -160,8 +165,27 @@ const Dashboard = () => {
           anfragen: counts[l.id] ?? 0,
         }))
       );
+      setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, [user]);
+
+  const toggleListingStatus = async (id: string, current: string) => {
+    const next = current === 'aktiv' ? 'inaktiv' : 'aktiv';
+    const prev = myListings;
+    setMyListings(list => list.map(l => l.id === id ? { ...l, status: next } : l));
+    const { error } = await supabase
+      .from('inserate')
+      .update({ status: next })
+      .eq('id', id)
+      .eq('user_id', user!.id);
+    if (error) {
+      setMyListings(prev);
+      toast.error('Status konnte nicht geändert werden.');
+    } else {
+      toast.success('Status aktualisiert');
+    }
+  };
 
   const handleMode = (m: Mode) => {
     if (m === mode) return;
