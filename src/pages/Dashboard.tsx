@@ -347,12 +347,16 @@ const SuchenView = ({
     </div>
 
     <h2 className="mb-4 mt-8 text-[18px] font-bold text-foreground">Meine Anfragen</h2>
-    {sentAnfragen.length === 0 ? (
+    {loading ? (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => <AnfrageRowSkeleton key={i} />)}
+      </div>
+    ) : sentAnfragen.length === 0 ? (
       <div className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-sm text-foreground-tertiary">
         Du hast noch keine Anfragen gesendet.
       </div>
     ) : (
-      <div className="space-y-2">
+      <div className="space-y-2 animate-fade-in">
         {sentAnfragen.map(r => (
           <button
             key={r.id}
@@ -379,11 +383,15 @@ const AnbietenView = ({
   receivedAnfragen,
   openCount,
   myListings,
+  loading,
+  onToggleStatus,
 }: {
   navigate: ReturnType<typeof useNavigate>;
   receivedAnfragen: AnfrageRow[];
   openCount: number;
   myListings: MyListing[];
+  loading: boolean;
+  onToggleStatus: (id: string, current: string) => void;
 }) => {
   const activeCount = myListings.filter(l => l.status === 'aktiv').length;
   const formatPrice = (l: MyListing) =>
