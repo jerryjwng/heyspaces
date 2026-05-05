@@ -99,7 +99,7 @@ export function Navbar(_props: NavbarProps = {}) {
       <header className="sticky top-0 z-[100] h-[64px] border-b border-border bg-white/95 backdrop-blur-md md:h-[68px]">
         <div className="mx-auto flex h-full max-w-[1280px] items-center gap-4 px-4 md:px-8">
           {/* LEFT — Logo */}
-          <Link to="/" className="shrink-0 text-[18px] font-bold tracking-[-0.025em] text-foreground">
+          <Link to="/" className="hidden shrink-0 text-[18px] font-bold tracking-[-0.025em] text-foreground md:block">
             HeySpaces
           </Link>
 
