@@ -1,13 +1,28 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Search, Home, MessageSquare, Shield } from 'lucide-react';
+import { ArrowRight, Search, MessageSquare, Shield } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { InseratGrid } from '@/components/inserate/inserat-grid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockInserate } from '@/lib/mock-data';
+import { supabase } from '@/integrations/supabase/client';
+import { mapInserat } from '@/lib/inserat-mapper';
+import type { Inserat } from '@/lib/types';
 
 const Index = () => {
+  const [latest, setLatest] = useState<Inserat[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from('inserate')
+      .select('*')
+      .eq('status', 'aktiv')
+      .order('created_at', { ascending: false })
+      .limit(6)
+      .then(({ data }) => setLatest((data ?? []).map(r => mapInserat(r))));
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -59,7 +74,7 @@ const Index = () => {
             <Link to="/inserate">Alle ansehen <ArrowRight className="h-4 w-4" /></Link>
           </Button>
         </div>
-        <InseratGrid inserate={mockInserate.slice(0, 6)} />
+        <InseratGrid inserate={latest} />
       </section>
 
       {/* So funktioniert's */}
