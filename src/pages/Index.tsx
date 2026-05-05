@@ -74,7 +74,7 @@ const Index = () => {
             <Link to="/inserate">Alle ansehen <ArrowRight className="h-4 w-4" /></Link>
           </Button>
         </div>
-        <InseratGrid inserate={mockInserate.slice(0, 6)} />
+        <InseratGrid inserate={latest} />
       </section>
 
       {/* So funktioniert's */}
