@@ -4,8 +4,10 @@ import { Search } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { InseratCard } from '@/components/inserate/inserat-card';
-import { AirbnbSearch, AirbnbSearchValues, KatFilter } from '@/components/shared/airbnb-search';
 import { useFavoriten } from '@/hooks/use-favoriten';
+
+type KatFilter = 'alle' | 'mieten' | 'wg_zimmer' | 'kaufen';
+interface AirbnbSearchValues { ort: string; kategorie: KatFilter; maxPreis: string; zimmer: number; }
 import { supabase } from '@/integrations/supabase/client';
 import { mapInserat } from '@/lib/inserat-mapper';
 import type { Inserat } from '@/lib/types';
