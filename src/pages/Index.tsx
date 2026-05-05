@@ -1,21 +1,17 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Search, Home, MessageSquare, Shield } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
-import { FilterBar } from '@/components/shared/filter-bar';
 import { InseratGrid } from '@/components/inserate/inserat-grid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { mockInserate } from '@/lib/mock-data';
 
 const Index = () => {
-  const [filterOpen, setFilterOpen] = useState(false);
-
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar onSearchClick={() => setFilterOpen(!filterOpen)} />
-      {filterOpen && <FilterBar expanded onToggle={() => setFilterOpen(false)} />}
+      <Navbar />
+
 
       {/* Hero */}
       <section className="container mx-auto px-6 py-20 text-center md:py-28">
