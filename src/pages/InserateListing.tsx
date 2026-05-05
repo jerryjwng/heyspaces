@@ -4,8 +4,10 @@ import { Search } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { InseratCard } from '@/components/inserate/inserat-card';
-import { AirbnbSearch, AirbnbSearchValues, KatFilter } from '@/components/shared/airbnb-search';
 import { useFavoriten } from '@/hooks/use-favoriten';
+
+type KatFilter = 'alle' | 'mieten' | 'wg_zimmer' | 'kaufen';
+interface AirbnbSearchValues { ort: string; kategorie: KatFilter; maxPreis: string; zimmer: number; }
 import { supabase } from '@/integrations/supabase/client';
 import { mapInserat } from '@/lib/inserat-mapper';
 import type { Inserat } from '@/lib/types';
@@ -18,12 +20,12 @@ const PAGE_SIZE = 9;
 const InserateListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [values, setValues] = useState<AirbnbSearchValues>({
+  const values: AirbnbSearchValues = useMemo(() => ({
     ort: searchParams.get('stadt') || '',
     kategorie: (searchParams.get('kategorie') as KatFilter) || 'alle',
     maxPreis: searchParams.get('maxPreis') || '',
     zimmer: Number(searchParams.get('zimmer')) || 0,
-  });
+  }), [searchParams]);
 
   const [sortBy, setSortBy] = useState<SortBy>('newest');
   const { favorites, toggle: toggleFavorite } = useFavoriten();
@@ -31,16 +33,6 @@ const InserateListing = () => {
 
   const [inserate, setInserate] = useState<Inserat[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Sync URL whenever values change
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (values.ort) p.set('stadt', values.ort);
-    if (values.kategorie !== 'alle') p.set('kategorie', values.kategorie);
-    if (values.maxPreis) p.set('maxPreis', values.maxPreis);
-    if (values.zimmer > 0) p.set('zimmer', String(values.zimmer));
-    setSearchParams(p, { replace: true });
-  }, [values, setSearchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,25 +71,12 @@ const InserateListing = () => {
   const remaining = filtered.length - visible.length;
 
   const resetFilters = () => {
-    setValues({ ort: '', kategorie: 'alle', maxPreis: '', zimmer: 0 });
+    setSearchParams(new URLSearchParams(), { replace: true });
   };
-
-
-
 
   return (
     <div className="flex min-h-screen flex-col bg-sand">
-      <Navbar hideSearch />
-
-      {/* Airbnb-style search */}
-      <div className="sticky top-[68px] z-30 border-b border-border bg-sand">
-        <AirbnbSearch
-          values={values}
-          onApply={setValues}
-          onReset={resetFilters}
-          resultCount={filtered.length}
-        />
-      </div>
+      <Navbar />
 
       {/* Results header */}
       <div className="mx-auto w-full max-w-[1200px] px-6 pb-4 pt-8 md:px-12 md:pt-10">
