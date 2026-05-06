@@ -31,20 +31,41 @@ const Index = () => {
 
       {/* Hero */}
       <section className="container mx-auto px-6 py-20 text-center md:py-28">
-        <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-          Deine neue Wohnung wartet.
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-          Mieten, kaufen oder WG-Zimmer finden — direkt vom Anbieter, ohne Provision.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-          <Button asChild className="rounded-full gap-2 h-12 px-6 text-base">
-            <Link to="/inserate">Inserate entdecken <ArrowRight className="h-4 w-4" /></Link>
-          </Button>
-          <Button asChild variant="outline" className="rounded-full gap-2 h-12 px-6 text-base">
-            <Link to="/inserate/neu">Inserat aufgeben</Link>
-          </Button>
-        </div>
+        <AnimatedGroup
+          variants={{
+            container: {
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+              },
+            },
+            item: {
+              hidden: { opacity: 0, y: 16, filter: 'blur(12px)' },
+              visible: {
+                opacity: 1,
+                y: 0,
+                filter: 'blur(0px)',
+                transition: { type: 'spring', bounce: 0.3, duration: 1.5 },
+              },
+            },
+          }}
+        >
+          <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+            Deine neue Wohnung wartet.
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
+            Mieten, kaufen oder WG-Zimmer finden — direkt vom Anbieter, ohne Provision.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Button asChild className="rounded-full gap-2 h-12 px-6 text-base">
+              <Link to="/inserate">Inserate entdecken <ArrowRight className="h-4 w-4" /></Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full gap-2 h-12 px-6 text-base">
+              <Link to="/inserate/neu">Inserat aufgeben</Link>
+            </Button>
+          </div>
+        </AnimatedGroup>
       </section>
 
       {/* Kategorie Cards */}
