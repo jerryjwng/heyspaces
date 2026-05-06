@@ -6,6 +6,7 @@ import { Footer } from '@/components/shared/footer';
 import { InseratGrid } from '@/components/inserate/inserat-grid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AnimatedGroup } from '@/components/ui/animated-group';
 import { supabase } from '@/integrations/supabase/client';
 import { mapInserat } from '@/lib/inserat-mapper';
 import type { Inserat } from '@/lib/types';
